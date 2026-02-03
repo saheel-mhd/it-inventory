@@ -1,0 +1,140 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ProductStatus {
+  ACTIVE_USE
+  AVAILABLE
+  SERVICEABLE
+  DAMAGED
+  UNDER_SERVICE
+}
+
+enum WarrantyPeriod {
+  THREE_MONTHS
+  SIX_MONTHS
+  ONE_YEAR
+}
+
+enum Department {
+  IT
+  FINANCE
+  HR
+  OPERATIONS
+  SALES
+}
+
+model User {
+  id         String   @id @default(cuid())
+  name       String   @unique
+  password   String   
+
+  createdBy  String?
+  createdAt  DateTime @default(now())
+  updatedBy  String?
+  updatedAt  DateTime @updatedAt
+
+  lastLogin  DateTime?
+
+  @@index([name])
+}
+
+model Product {
+  id            String        @id @default(cuid())
+  product       String
+  brand         String
+  snNumber      String?       @unique
+  sku           String
+  specification String?
+  orderedDate   DateTime?
+  cost          Decimal?
+  warranty      WarrantyPeriod?
+  warrantyExpire DateTime?
+
+  categoryId    String
+  category      Category      @relation(fields: [categoryId], references: [id])
+  assetTypeId   String
+  assetType     AssetType     @relation(fields: [assetTypeId], references: [id])
+
+  createdBy     String?
+  createdAt     DateTime      @default(now())
+  updatedBy     String?
+  updatedAt     DateTime      @updatedAt
+
+  assignedTo    String?
+  status        ProductStatus @default(AVAILABLE)
+
+  staffAssignments StaffInventory[]
+  services        ProductService[]
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  products Product[]
+}
+
+model AssetType {
+  id       String    @id @default(cuid())
+  name     String    @unique
+  products Product[]
+}
+
+model Staff {
+  id        String           @id @default(cuid())
+  name      String
+  department Department
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  inventoryUsing StaffInventory[]
+}
+
+model StaffInventory {
+  id              String   @id @default(cuid())
+  staffId         String
+  productId       String
+  quantity        Int      @default(1)
+  startDate       DateTime
+  returnDate      DateTime?
+  returnReason    String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  staff   Staff   @relation(fields: [staffId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([staffId])
+  @@index([productId])
+}
+
+model ProductService {
+  id                 String    @id @default(cuid())
+  productId           String
+  product            Product   @relation(fields: [productId], references: [id])
+
+  repairable          Boolean
+  notes               String?
+  sentToService       Boolean
+  vendorName          String?
+  expectedReturnDate  DateTime?
+
+  // Only relevant when sentToService=true:
+  // null = still in service, true = serviced, false = service failed.
+  serviced            Boolean?
+  serviceDate         DateTime?
+  serviceCost         Decimal?
+  serviceMessage      String?
+  serviceFailureReason String?
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@index([productId])
+  @@index([sentToService])
+  @@index([serviced])
+}
