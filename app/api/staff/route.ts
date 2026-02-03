@@ -28,14 +28,16 @@ export async function POST(request: Request) {
   }
 
   const staffName = body.name.trim();
+  const department = body.department as Department;
+  const assignments = body.assignments;
 
   const staff = await prisma.$transaction(async (tx) => {
     const created = await tx.staff.create({
       data: {
         name: staffName,
-        department: body.department as Department,
+        department,
         inventoryUsing: {
-          create: body.assignments.map((assignment) => ({
+          create: assignments.map((assignment) => ({
             productId: assignment.productId,
             quantity: assignment.quantity ?? 1,
             startDate: assignment.startDate
@@ -47,7 +49,7 @@ export async function POST(request: Request) {
     });
 
     await tx.product.updateMany({
-      where: { id: { in: body.assignments.map((a) => a.productId) } },
+      where: { id: { in: assignments.map((a) => a.productId) } },
       data: {
         assignedTo: staffName,
         status: "ACTIVE_USE",

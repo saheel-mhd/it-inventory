@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "~/lib/prisma";
-import { Prisma } from "@prisma/client";
+import { Prisma, ProductStatus } from "@prisma/client";
 
 type Payload = {
   product?: string;
@@ -119,11 +119,17 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q") ?? "";
   const categoryId = searchParams.get("categoryId") ?? "";
-  const status = searchParams.get("status") ?? "";
+  const statusRaw = searchParams.get("status") ?? "";
   const sort = searchParams.get("sort") ?? "updated_desc";
 
   const orderBy =
-    sort === "updated_asc" ? { updatedAt: "asc" } : { updatedAt: "desc" };
+    sort === "updated_asc"
+      ? ({ updatedAt: "asc" } as const)
+      : ({ updatedAt: "desc" } as const);
+
+  const status = Object.values(ProductStatus).includes(statusRaw as ProductStatus)
+    ? (statusRaw as ProductStatus)
+    : null;
 
   const where = {
     ...(q

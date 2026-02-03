@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import AddStaffModal from "~/app/components/staff/add-staff-modal";
 import AssignProductModal from "~/app/components/staff/assign-product-modal";
 import Button from "~/app/components/ui/button";

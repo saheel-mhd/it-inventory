@@ -27,11 +27,18 @@ export default async function UsersPage({
   const q = getParam(resolvedSearchParams?.q);
   const page = getPage(resolvedSearchParams?.page);
 
+  const normalizedQ = q.trim().toUpperCase().replace(/\s+/g, "_");
+  const departmentMatch = Object.values(Department).includes(
+    normalizedQ as Department,
+  )
+    ? (normalizedQ as Department)
+    : null;
+
   const where = q
     ? {
         OR: [
           { name: { contains: q, mode: "insensitive" as const } },
-          { department: { contains: q, mode: "insensitive" as const } },
+          ...(departmentMatch ? [{ department: departmentMatch }] : []),
         ],
       }
     : {};

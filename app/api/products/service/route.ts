@@ -125,7 +125,7 @@ export async function POST(request: Request) {
 
         await tx.staffInventory.updateMany({
           where: { productId: product.id, returnDate: null },
-          data: { returnDate: new Date() },
+          data: { returnDate: new Date(), returnReason: body.serviceFailureReason!.trim() },
         });
       }
     });

@@ -43,7 +43,10 @@ export async function POST(request: Request) {
     }
   }
 
-  const sentToService = body.repairable ? (body.sentToService ?? false) : false;
+  const productId = body.productId;
+  const repairable = body.repairable;
+
+  const sentToService = repairable ? (body.sentToService ?? false) : false;
   const expectedReturnDate =
     sentToService && body.serviceReturnDate
       ? new Date(body.serviceReturnDate)
@@ -58,9 +61,9 @@ export async function POST(request: Request) {
   await prisma.$transaction(async (tx) => {
     await tx.productService.create({
       data: {
-        productId: body.productId!,
-        repairable: body.repairable,
-        notes: body.repairable ? null : body.notes?.trim() || null,
+        productId,
+        repairable,
+        notes: repairable ? null : body.notes?.trim() || null,
         sentToService,
         vendorName: sentToService ? body.serviceVendor?.trim() || null : null,
         expectedReturnDate,
@@ -68,21 +71,22 @@ export async function POST(request: Request) {
     });
 
     await tx.product.update({
-      where: { id: body.productId },
+      where: { id: productId },
       data: {
-        status: body.repairable
+        status: repairable
           ? sentToService
             ? "UNDER_SERVICE"
             : "SERVICEABLE"
           : "DAMAGED",
-        assignedTo: body.repairable ? undefined : null,
+        assignedTo: repairable ? undefined : null,
       },
     });
 
-    if (!body.repairable) {
+    if (!repairable) {
+      const returnReason = body.notes?.trim() || "Marked as damaged";
       await tx.staffInventory.updateMany({
-        where: { productId: body.productId, returnDate: null },
-        data: { returnDate: new Date() },
+        where: { productId, returnDate: null },
+        data: { returnDate: new Date(), returnReason },
       });
     }
   });
