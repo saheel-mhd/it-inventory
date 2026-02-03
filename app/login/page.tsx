@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Button from '~/app/components/ui/button'
 
@@ -10,11 +10,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    const user = localStorage.getItem('user')
-    if (user) router.replace('/dashboard')
-  }, [router])
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -34,14 +29,6 @@ export default function LoginPage() {
         setError(data?.message || 'Login failed.')
         return
       }
-
-      localStorage.setItem(
-        'user',
-        JSON.stringify({
-          username,
-          loggedInAt: Date.now(),
-        })
-      )
 
       router.replace('/dashboard')
     } catch {

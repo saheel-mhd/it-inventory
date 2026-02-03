@@ -11,10 +11,14 @@ export default function LogoutButton({ className }: LogoutButtonProps) {
   const router = useRouter();
 
   const onLogout = () => {
-    try {
-      localStorage.removeItem("user");
-    } catch {}
-    router.replace("/login");
+    fetch("/api/logout", { method: "POST" })
+      .catch(() => null)
+      .finally(() => {
+        try {
+          localStorage.removeItem("user");
+        } catch {}
+        router.replace("/login");
+      });
   };
 
   return (

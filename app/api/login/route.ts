@@ -41,7 +41,18 @@ export async function POST(req: Request) {
       data: { lastLogin: new Date() },
     });
 
-    return NextResponse.json({ ok: true });
+    const response = NextResponse.json({ ok: true });
+    const maxAge = 60 * 60 * 24 * 10;
+    response.cookies.set({
+      name: "session",
+      value: user.id,
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge,
+    });
+    return response;
   } catch (err) {
     console.error("LOGIN API ERROR:", err); // <-- check terminal for this output
     return NextResponse.json(
