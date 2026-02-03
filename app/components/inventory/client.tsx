@@ -3,7 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Button from "~/app/components/ui/button";
 import DamageModal from "~/app/components/products/damage-modal";
+import EditItemModal from "~/app/components/products/edit-item-modal";
 import InventoryToolbar from "~/app/components/inventory/toolbar";
+import ReturnProductModal from "~/app/components/staff/return-product-modal";
+import { IconReturn } from "~/app/components/ui/icons";
 import {
   Table,
   TableBody,
@@ -29,7 +32,10 @@ type Product = {
   cost: string | null;
   warranty: string | null;
   warrantyExpire: string | null;
+  categoryId: string;
+  assetTypeId: string;
   assignedTo: string | null;
+  activeAssignmentId: string | null;
   status: string;
   createdAt: string;
   category?: Option | null;
@@ -71,6 +77,7 @@ export default function InventoryClient({
   const [isLoading, setIsLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [damageProduct, setDamageProduct] = useState<Product | null>(null);
+  const [editProduct, setEditProduct] = useState<Product | null>(null);
   const activeRequest = useRef(0);
 
   const queryString = useMemo(() => {
@@ -161,6 +168,18 @@ export default function InventoryClient({
                     >
                       👁️
                     </button>
+                    {item.activeAssignmentId && (
+                      <ReturnProductModal
+                        assignmentId={item.activeAssignmentId}
+                        productName={item.product}
+                        sku={item.sku}
+                        staffName={item.assignedTo}
+                        triggerLabel=""
+                        triggerIcon={<IconReturn className="h-4 w-4" />}
+                        triggerClassName="inline-flex items-center justify-center rounded-md px-2 py-1 text-sm text-gray-600 hover:bg-gray-100"
+                        onSaved={() => loadProducts(queryString)}
+                      />
+                    )}
                     {item.status !== "DAMAGED" && (
                       <button
                         type="button"
@@ -210,7 +229,15 @@ export default function InventoryClient({
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button type="button">Edit</Button>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setEditProduct(selectedProduct);
+                      setSelectedProduct(null);
+                    }}
+                  >
+                    Edit
+                  </Button>
                   <button
                     type="button"
                     className="rounded-md px-2 py-1 text-sm text-gray-500 hover:bg-gray-100"
@@ -358,6 +385,34 @@ export default function InventoryClient({
             : null
         }
         onClose={() => setDamageProduct(null)}
+        onSaved={() => loadProducts(queryString)}
+      />
+
+      <EditItemModal
+        open={Boolean(editProduct)}
+        product={
+          editProduct
+            ? {
+                id: editProduct.id,
+                product: editProduct.product,
+                brand: editProduct.brand,
+                snNumber: editProduct.snNumber,
+                sku: editProduct.sku,
+                specification: editProduct.specification,
+                orderedDate: editProduct.orderedDate,
+                cost: editProduct.cost,
+                warranty: editProduct.warranty,
+                warrantyExpire: editProduct.warrantyExpire,
+                categoryId: editProduct.categoryId,
+                assetTypeId: editProduct.assetTypeId,
+                status: editProduct.status,
+              }
+            : null
+        }
+        categories={categories}
+        assetTypes={assetTypes}
+        statusOptions={statusOptions}
+        onClose={() => setEditProduct(null)}
         onSaved={() => loadProducts(queryString)}
       />
     </div>

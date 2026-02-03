@@ -44,6 +44,15 @@ const toLabel = (value: string) =>
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 
+const formatReturnReason = (
+  reason: string | null | undefined,
+  note: string | null | undefined,
+) => {
+  if (!reason) return "-";
+  const base = reason === "OTHER" ? "Other" : toLabel(reason);
+  return note ? `${base} - ${note}` : base;
+};
+
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div className="space-y-1">
@@ -286,7 +295,12 @@ export default async function ProductReportPage({
                             ? formatDate(assignment.returnDate)
                             : "Present"}
                         </TableCell>
-                        <TableCell>{assignment.returnReason ?? "-"}</TableCell>
+                        <TableCell>
+                          {formatReturnReason(
+                            assignment.returnReason,
+                            assignment.returnReasonNote,
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))}
                     {selectedProduct.staffAssignments.length === 0 && (

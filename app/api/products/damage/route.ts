@@ -83,10 +83,14 @@ export async function POST(request: Request) {
     });
 
     if (!repairable) {
-      const returnReason = body.notes?.trim() || "Marked as damaged";
+      const returnReasonNote = body.notes?.trim() || "Marked as damaged";
       await tx.staffInventory.updateMany({
         where: { productId, returnDate: null },
-        data: { returnDate: new Date(), returnReason },
+        data: {
+          returnDate: new Date(),
+          returnReason: "DAMAGED",
+          returnReasonNote,
+        },
       });
     }
   });

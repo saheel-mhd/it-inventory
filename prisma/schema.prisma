@@ -28,6 +28,13 @@ enum Department {
   SALES
 }
 
+enum ReturnReason {
+  RESIGNED
+  DAMAGED
+  NOT_NEEDED
+  OTHER
+}
+
 model User {
   id         String   @id @default(cuid())
   name       String   @unique
@@ -101,7 +108,8 @@ model StaffInventory {
   quantity        Int      @default(1)
   startDate       DateTime
   returnDate      DateTime?
-  returnReason    String?
+  returnReason    ReturnReason?
+  returnReasonNote String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

@@ -3,7 +3,9 @@
 import { useState } from "react";
 import AddStaffModal from "~/app/components/staff/add-staff-modal";
 import AssignProductModal from "~/app/components/staff/assign-product-modal";
+import ReturnProductModal from "~/app/components/staff/return-product-modal";
 import Button from "~/app/components/ui/button";
+import { IconReturn } from "~/app/components/ui/icons";
 import {
   Pagination,
   PaginationContent,
@@ -33,6 +35,8 @@ type StaffInventoryRow = {
   quantity: number;
   startDate: string;
   returnDate: string | null;
+  returnReason?: string | null;
+  returnReasonNote?: string | null;
 };
 
 type StaffRow = {
@@ -249,7 +253,7 @@ export default function StaffClient({
                   {selectedStaff.inventoryUsing.map((assignment) => (
                     <div
                       key={assignment.id}
-                      className="grid gap-2 rounded-lg border border-gray-200 p-3 md:grid-cols-4"
+                      className="grid gap-2 rounded-lg border border-gray-200 p-3 md:grid-cols-5"
                     >
                       <div>
                         <div className="text-xs font-semibold uppercase text-gray-400">
@@ -282,6 +286,26 @@ export default function StaffClient({
                         <div className="text-sm text-gray-900">
                           {new Date(assignment.startDate).toLocaleDateString()}
                         </div>
+                      </div>
+                      <div className="flex items-end justify-end">
+                        {assignment.returnDate ? (
+                          <div className="text-xs text-gray-500">
+                            Returned
+                          </div>
+                        ) : (
+                          <ReturnProductModal
+                            assignmentId={assignment.id}
+                            productName={assignment.product.product}
+                            sku={assignment.product.sku}
+                            staffName={selectedStaff.name}
+                            triggerLabel=""
+                            triggerIcon={<IconReturn className="h-4 w-4" />}
+                            triggerClassName="inline-flex items-center justify-center rounded-md px-2 py-1 text-sm text-gray-600 hover:bg-gray-100"
+                            onSaved={() => {
+                              setSelectedStaff(null);
+                            }}
+                          />
+                        )}
                       </div>
                     </div>
                   ))}

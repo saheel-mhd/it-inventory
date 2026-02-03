@@ -82,6 +82,8 @@ export default async function UsersPage({
       quantity: assignment.quantity,
       startDate: assignment.startDate.toISOString(),
       returnDate: assignment.returnDate ? assignment.returnDate.toISOString() : null,
+      returnReason: assignment.returnReason,
+      returnReasonNote: assignment.returnReasonNote,
       product: assignment.product,
     })),
   }));

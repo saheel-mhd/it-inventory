@@ -85,3 +85,21 @@ export function IconChevronRight({
   );
 }
 
+export function IconReturn({ title = "Return", ...props }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden={title ? undefined : true}
+      {...props}
+    >
+      {title ? <title>{title}</title> : null}
+      <path d="M9 14 4 9l5-5" />
+      <path d="M4 9h9a5 5 0 1 1 0 10h-3" />
+    </svg>
+  );
+}

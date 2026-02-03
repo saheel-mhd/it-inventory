@@ -49,12 +49,14 @@ export default async function InventoryPage() {
       const latestAssignment = staffAssignments[0];
       const assignedName =
         rest.assignedTo ?? latestAssignment?.staff?.name ?? null;
+      const activeAssignmentId = latestAssignment?.id ?? null;
       const status =
         assignedName && rest.status === "AVAILABLE" ? "ACTIVE_USE" : rest.status;
 
       return {
         ...rest,
         assignedTo: assignedName,
+        activeAssignmentId,
         status,
       };
     })
