@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Button from '~/app/components/ui/button'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -53,7 +54,7 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        <div className="rounded-2xl border bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border surface-card p-6 shadow-sm">
           <h1 className="text-2xl font-bold tracking-tight">Login</h1>
           <p className="mt-1 text-sm text-gray-600">
             Sign in to access the dashboard.
@@ -95,13 +96,13 @@ export default function LoginPage() {
               </div>
             )}
 
-            <button
+            <Button
               type="submit"
               disabled={loading}
-              className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="w-full justify-center disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? 'Logging in…' : 'Login'}
-            </button>
+            </Button>
           </form>
         </div>
 

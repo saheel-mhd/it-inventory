@@ -1,26 +1,108 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f7f8f4;
+  --foreground: #1a2517;
+  --surface: #ffffff;
+  --surface-alt: #eceee6;
+  --border: #c0c2b9;
+  --accent: #acc8a2;
+  --accent-ink: #1a2517;
+  --muted: #515a4e;
+  --muted-light: #7a7f76;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-body);
+  --color-gray-50: #f7f8f4;
+  --color-gray-100: #eceee6;
+  --color-gray-200: #d7d9d0;
+  --color-gray-300: #c0c2b9;
+  --color-gray-400: #9fa39b;
+  --color-gray-500: #7a7f76;
+  --color-gray-600: #515a4e;
+  --color-gray-700: #3a4136;
+  --color-gray-800: #2a3326;
+  --color-gray-900: #1a2517;
+  --color-gray-950: #0e130c;
+  --color-blue-50: #f1f6ee;
+  --color-blue-100: #e3ecdd;
+  --color-blue-200: #cfdec9;
+  --color-blue-300: #bad0b4;
+  --color-blue-400: #acc8a2;
+  --color-blue-500: #96b08c;
+  --color-blue-600: #7b9674;
+  --color-blue-700: #5f7458;
+  --color-blue-800: #45533f;
+  --color-blue-900: #2c382a;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
+  letter-spacing: 0.01em;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  color: #0e130c;
+  letter-spacing: 0.02em;
+}
+
+.heading,
+.text-2xl.font-bold,
+.text-3xl.font-bold,
+.text-xl.font-semibold,
+.text-lg.font-semibold,
+.text-base.font-semibold {
+  font-family: var(--font-heading);
+  color: #0e130c;
+}
+
+.font-nav {
+  font-family: var(--font-nav);
+}
+
+.surface-card {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+.surface-muted {
+  background: var(--surface-alt);
+  border-color: var(--border);
+}
+
+/* Premium palette overrides for common utility classes */
+.bg-gray-50 {
+  background-color: var(--background) !important;
+}
+.bg-gray-100 {
+  background-color: var(--surface-alt) !important;
+}
+.bg-white {
+  background-color: var(--surface) !important;
+}
+.border-gray-200,
+.border-gray-300 {
+  border-color: var(--border) !important;
+}
+.text-gray-900 {
+  color: var(--foreground) !important;
+}
+.text-gray-700 {
+  color: var(--muted) !important;
+}
+.text-gray-600,
+.text-gray-500 {
+  color: var(--muted-light) !important;
 }

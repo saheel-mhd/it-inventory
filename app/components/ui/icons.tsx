@@ -103,3 +103,122 @@ export function IconReturn({ title = "Return", ...props }: IconProps) {
     </svg>
   );
 }
+
+export function IconHome({ title = "Dashboard", ...props }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden={title ? undefined : true}
+      {...props}
+    >
+      {title ? <title>{title}</title> : null}
+      <path d="m3 9 9-7 9 7" />
+      <path d="M9 22V12h6v10" />
+      <path d="M21 22H3" />
+    </svg>
+  );
+}
+
+export function IconInventory({ title = "Inventory", ...props }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden={title ? undefined : true}
+      {...props}
+    >
+      {title ? <title>{title}</title> : null}
+      <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+      <path d="M3.3 7.7 12 12.6l8.7-4.9" />
+      <path d="M12 22V12.6" />
+    </svg>
+  );
+}
+
+export function IconReport({ title = "Reports", ...props }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden={title ? undefined : true}
+      {...props}
+    >
+      {title ? <title>{title}</title> : null}
+      <path d="M3 3h18v18H3z" />
+      <path d="M7 13h4v6H7z" />
+      <path d="M13 7h4v12h-4z" />
+      <path d="M7 7h2v2H7z" />
+    </svg>
+  );
+}
+
+export function IconSettings({ title = "Settings", ...props }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden={title ? undefined : true}
+      {...props}
+    >
+      {title ? <title>{title}</title> : null}
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9c0 .7.4 1.3 1 1.5.2.1.4.1.6.1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" />
+    </svg>
+  );
+}
+
+export function IconAccount({ title = "Account", ...props }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden={title ? undefined : true}
+      {...props}
+    >
+      {title ? <title>{title}</title> : null}
+      <path d="M20 21a8 8 0 1 0-16 0" />
+      <circle cx="12" cy="7" r="4" />
+    </svg>
+  );
+}
+
+export function IconLogout({ title = "Logout", ...props }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden={title ? undefined : true}
+      {...props}
+    >
+      {title ? <title>{title}</title> : null}
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <path d="M16 17l5-5-5-5" />
+      <path d="M21 12H9" />
+    </svg>
+  );
+}
