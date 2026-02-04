@@ -4,11 +4,15 @@ import { useState } from "react";
 import Button from "~/app/components/ui/button";
 import AddItemForm from "~/app/components/add-item-form";
 import AssignProductModal from "~/app/components/staff/assign-product-modal";
+import FilterPanel from "~/app/components/ui/filter-panel";
 import SearchInput from "~/app/components/ui/search-input";
 
 type Option = {
   id: string;
   name: string;
+  assetTypeId?: string | null;
+  prefix?: string | null;
+  isActive?: boolean;
 };
 
 type InventoryToolbarProps = {
@@ -70,8 +74,7 @@ export default function InventoryToolbar({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 rounded-xl border bg-white p-4 shadow-sm">
-          <div className="text-sm font-medium text-gray-700">Filters</div>
+        <FilterPanel isLoading={isLoading}>
 
           <select
             name="categoryId"
@@ -117,10 +120,7 @@ export default function InventoryToolbar({
             <option value="updated_asc">Oldest updated</option>
           </select>
 
-          {isLoading && (
-            <div className="text-xs text-gray-500">Updating...</div>
-          )}
-        </div>
+        </FilterPanel>
       </div>
 
       {isOpen && (

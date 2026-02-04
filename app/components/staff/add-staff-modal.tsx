@@ -69,10 +69,6 @@ export default function AddStaffModal({ products, departments }: AddStaffModalPr
     }
 
     const cleanedRows = rows.filter((row) => row.productId);
-    if (cleanedRows.length === 0) {
-      setError("Add at least one product.");
-      return;
-    }
 
     setIsSubmitting(true);
     try {

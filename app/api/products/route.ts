@@ -21,7 +21,6 @@ export async function POST(request: Request) {
   const errors: Record<string, string> = {};
 
   if (!body.product?.trim()) errors.product = "Product name is required.";
-  if (!body.brand?.trim()) errors.brand = "Brand is required.";
   if (!body.sku?.trim()) errors.sku = "SKU is required.";
   if (!body.categoryId) errors.categoryId = "Category is required.";
   if (!body.assetTypeId) errors.assetTypeId = "Asset type is required.";
@@ -59,7 +58,7 @@ export async function POST(request: Request) {
     await prisma.product.create({
       data: {
         product: body.product!.trim(),
-        brand: body.brand!.trim(),
+        brand: body.brand?.trim() || "N/A",
         sku: body.sku!.trim(),
         snNumber: body.snNumber?.trim() || null,
         specification: body.specification?.trim() || null,

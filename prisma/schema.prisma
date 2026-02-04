@@ -71,13 +71,19 @@ model Product {
 model Category {
   id       String    @id @default(cuid())
   name     String    @unique
+  prefix   String?
+  isActive Boolean   @default(true)
+  assetTypeId String?
+  assetType AssetType? @relation(fields: [assetTypeId], references: [id])
   products Product[]
 }
 
 model AssetType {
   id       String    @id @default(cuid())
   name     String    @unique
+  isActive Boolean   @default(true)
   products Product[]
+  categories Category[]
 }
 
 model Staff {
@@ -95,6 +101,7 @@ model DepartmentModel {
   id       String   @id @default(cuid())
   code     String   @unique
   name     String   @unique
+  isActive Boolean  @default(true)
   staffs   Staff[]
 }
 
@@ -103,6 +110,7 @@ model WarrantyPeriodModel {
   code     String    @unique
   name     String    @unique
   months   Int
+  isActive Boolean   @default(true)
   products Product[]
 }
 

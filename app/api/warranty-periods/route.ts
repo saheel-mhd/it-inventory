@@ -34,7 +34,7 @@ export async function POST(request: Request) {
         months,
         code: normalizeCode(name, months),
       },
-      select: { id: true, name: true, months: true, code: true },
+      select: { id: true, name: true, months: true, code: true, isActive: true },
     });
     return NextResponse.json({ warrantyPeriod }, { status: 201 });
   } catch (error: unknown) {

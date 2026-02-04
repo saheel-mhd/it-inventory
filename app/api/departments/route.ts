@@ -25,7 +25,7 @@ export async function POST(request: Request) {
   try {
     const department = await prisma.departmentModel.create({
       data: { name, code: normalizeCode(name) },
-      select: { id: true, name: true, code: true },
+      select: { id: true, name: true, code: true, isActive: true },
     });
     return NextResponse.json({ department }, { status: 201 });
   } catch (error: unknown) {

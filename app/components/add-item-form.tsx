@@ -6,10 +6,17 @@ import Button from "~/app/components/ui/button";
 type Option = {
   id: string;
   name: string;
+  isActive?: boolean;
+};
+
+type CategoryOption = Option & {
+  assetTypeId?: string | null;
+  prefix?: string | null;
+  isActive?: boolean;
 };
 
 type AddItemFormProps = {
-  categories: Option[];
+  categories: CategoryOption[];
   assetTypes: Option[];
   warrantyPeriods: Array<{ id: string; name: string; months: number }>;
   onCreated?: () => void;
@@ -54,6 +61,7 @@ export default function AddItemForm({
   const [form, setForm] = useState<FormState>(emptyForm);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSkuLoading, setIsSkuLoading] = useState(false);
 
   const setField = (field: keyof FormState) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm((prev) => ({ ...prev, [field]: event.target.value }));
@@ -79,10 +87,63 @@ export default function AddItemForm({
     }));
   }, [form.warrantyPeriodId, form.orderedDate, warrantyPeriods]);
 
+  useEffect(() => {
+    if (!form.assetTypeId) {
+      setForm((prev) => ({ ...prev, categoryId: "", sku: "" }));
+      return;
+    }
+
+    const selectedCategory = categories.find((item) => item.id === form.categoryId);
+    if (!selectedCategory || selectedCategory.assetTypeId !== form.assetTypeId) {
+      setForm((prev) => ({ ...prev, categoryId: "", sku: "" }));
+    }
+  }, [form.assetTypeId, form.categoryId, categories]);
+
+  useEffect(() => {
+    if (!form.categoryId) {
+      setForm((prev) => ({ ...prev, sku: "" }));
+      return;
+    }
+
+    const controller = new AbortController();
+    setIsSkuLoading(true);
+
+    const loadNextSku = async () => {
+      try {
+        const response = await fetch(
+          `/api/products/next-sku?categoryId=${encodeURIComponent(form.categoryId)}`,
+          { signal: controller.signal, cache: "no-store" },
+        );
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          setErrors((prev) => ({ ...prev, sku: payload?.error ?? "Failed to generate SKU." }));
+          setForm((prev) => ({ ...prev, sku: "" }));
+          return;
+        }
+        setErrors((prev) => ({ ...prev, sku: undefined }));
+        setForm((prev) => ({ ...prev, sku: payload?.sku ?? "" }));
+      } catch (error) {
+        if ((error as Error).name !== "AbortError") {
+          setErrors((prev) => ({ ...prev, sku: "Failed to generate SKU." }));
+        }
+      } finally {
+        setIsSkuLoading(false);
+      }
+    };
+
+    loadNextSku();
+    return () => controller.abort();
+  }, [form.categoryId]);
+
+  const filteredCategories = categories.filter(
+    (category) =>
+      category.assetTypeId === form.assetTypeId &&
+      (category.isActive === undefined || category.isActive),
+  );
+
   const validate = () => {
     const nextErrors: FormErrors = {};
     if (!form.product.trim()) nextErrors.product = "Product name is required.";
-    if (!form.brand.trim()) nextErrors.brand = "Brand is required.";
     if (!form.sku.trim()) nextErrors.sku = "SKU is required.";
     if (!form.categoryId) nextErrors.categoryId = "Category is required.";
     if (!form.assetTypeId) nextErrors.assetTypeId = "Asset type is required.";
@@ -138,6 +199,51 @@ export default function AddItemForm({
     >
       <div className="grid gap-4 md:grid-cols-2">
         <label className="text-sm font-medium text-gray-700">
+          Asset type
+          <select
+            className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"
+            name="assetTypeId"
+            value={form.assetTypeId}
+            onChange={setField("assetTypeId")}
+          >
+            <option value="">Select asset type</option>
+            {assetTypes
+              .filter((assetType) => assetType.isActive ?? true)
+              .map((assetType) => (
+              <option key={assetType.id} value={assetType.id}>
+                {assetType.name}
+              </option>
+            ))}
+          </select>
+          {errors.assetTypeId && (
+            <div className="mt-1 text-xs text-red-600">{errors.assetTypeId}</div>
+          )}
+        </label>
+
+        <label className="text-sm font-medium text-gray-700">
+          Category
+          <select
+            className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"
+            name="categoryId"
+            value={form.categoryId}
+            onChange={setField("categoryId")}
+            disabled={!form.assetTypeId}
+          >
+            <option value="">
+              {form.assetTypeId ? "Select category" : "Select asset type first"}
+            </option>
+            {filteredCategories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+          {errors.categoryId && (
+            <div className="mt-1 text-xs text-red-600">{errors.categoryId}</div>
+          )}
+        </label>
+
+        <label className="text-sm font-medium text-gray-700">
           Product name
           <input
             className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
@@ -187,13 +293,16 @@ export default function AddItemForm({
           <input
             className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             name="sku"
-            placeholder="MBP-14-2025"
+            placeholder={form.categoryId ? "Auto-generated SKU" : "Select category first"}
             type="text"
             value={form.sku}
-            onChange={setField("sku")}
+            readOnly
           />
           {errors.sku && (
             <div className="mt-1 text-xs text-red-600">{errors.sku}</div>
+          )}
+          {isSkuLoading && (
+            <div className="mt-1 text-xs text-gray-500">Generating SKU...</div>
           )}
         </label>
 
@@ -210,17 +319,6 @@ export default function AddItemForm({
         </label>
 
         <label className="text-sm font-medium text-gray-700">
-          Ordered date
-          <input
-            className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            name="orderedDate"
-            type="date"
-            value={form.orderedDate}
-            onChange={setField("orderedDate")}
-          />
-        </label>
-
-        <label className="text-sm font-medium text-gray-700">
           Cost
           <input
             className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
@@ -231,6 +329,17 @@ export default function AddItemForm({
             placeholder="0.00"
             value={form.cost}
             onChange={setField("cost")}
+          />
+        </label>
+
+        <label className="text-sm font-medium text-gray-700">
+          Ordered date
+          <input
+            className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            name="orderedDate"
+            type="date"
+            value={form.orderedDate}
+            onChange={setField("orderedDate")}
           />
         </label>
 
@@ -260,46 +369,6 @@ export default function AddItemForm({
             value={form.warrantyExpire}
             onChange={setField("warrantyExpire")}
           />
-        </label>
-
-        <label className="text-sm font-medium text-gray-700">
-          Category
-          <select
-            className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"
-            name="categoryId"
-            value={form.categoryId}
-            onChange={setField("categoryId")}
-          >
-            <option value="">Select category</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-          {errors.categoryId && (
-            <div className="mt-1 text-xs text-red-600">{errors.categoryId}</div>
-          )}
-        </label>
-
-        <label className="text-sm font-medium text-gray-700">
-          Asset type
-          <select
-            className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"
-            name="assetTypeId"
-            value={form.assetTypeId}
-            onChange={setField("assetTypeId")}
-          >
-            <option value="">Select asset type</option>
-            {assetTypes.map((assetType) => (
-              <option key={assetType.id} value={assetType.id}>
-                {assetType.name}
-              </option>
-            ))}
-          </select>
-          {errors.assetTypeId && (
-            <div className="mt-1 text-xs text-red-600">{errors.assetTypeId}</div>
-          )}
         </label>
       </div>
 

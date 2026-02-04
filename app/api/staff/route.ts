@@ -22,13 +22,9 @@ export async function POST(request: Request) {
   if (!body.departmentId) {
     return NextResponse.json({ error: "Department is required." }, { status: 400 });
   }
-  if (!body.assignments || body.assignments.length === 0) {
-    return NextResponse.json({ error: "At least one product is required." }, { status: 400 });
-  }
-
   const staffName = body.name.trim();
   const departmentId = body.departmentId;
-  const assignments = body.assignments;
+  const assignments = body.assignments ?? [];
 
   const department = await prisma.departmentModel.findUnique({
     where: { id: departmentId },
@@ -43,25 +39,31 @@ export async function POST(request: Request) {
       data: {
         name: staffName,
         departmentId: department.id,
-        inventoryUsing: {
-          create: assignments.map((assignment) => ({
-            productId: assignment.productId,
-            quantity: assignment.quantity ?? 1,
-            startDate: assignment.startDate
-              ? new Date(assignment.startDate)
-              : new Date(),
-          })),
-        },
+        ...(assignments.length > 0
+          ? {
+              inventoryUsing: {
+                create: assignments.map((assignment) => ({
+                  productId: assignment.productId,
+                  quantity: assignment.quantity ?? 1,
+                  startDate: assignment.startDate
+                    ? new Date(assignment.startDate)
+                    : new Date(),
+                })),
+              },
+            }
+          : {}),
       },
     });
 
-    await tx.product.updateMany({
-      where: { id: { in: assignments.map((a) => a.productId) } },
-      data: {
-        assignedTo: staffName,
-        status: "ACTIVE_USE",
-      },
-    });
+    if (assignments.length > 0) {
+      await tx.product.updateMany({
+        where: { id: { in: assignments.map((a) => a.productId) } },
+        data: {
+          assignedTo: staffName,
+          status: "ACTIVE_USE",
+        },
+      });
+    }
 
     return created;
   });

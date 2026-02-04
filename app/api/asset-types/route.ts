@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   try {
     const assetType = await prisma.assetType.create({
       data: { name },
-      select: { id: true, name: true },
+      select: { id: true, name: true, isActive: true },
     });
     return NextResponse.json({ assetType }, { status: 201 });
   } catch (error: unknown) {

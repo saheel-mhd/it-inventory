@@ -4,14 +4,23 @@ import { useMemo, useState, type ComponentType, type FormEvent } from "react";
 import Button from "~/app/components/ui/button";
 import {
   IconAssetType,
+  IconBan,
   IconCategory,
+  IconCheck,
   IconDepartment,
+  IconPencil,
   IconWarranty,
 } from "~/app/components/ui/icons";
 
 type NamedItem = {
   id: string;
   name: string;
+  isActive: boolean;
+};
+
+type CategoryItem = NamedItem & {
+  assetTypeName: string | null;
+  prefix?: string | null;
 };
 
 type WarrantyItem = NamedItem & {
@@ -19,7 +28,7 @@ type WarrantyItem = NamedItem & {
 };
 
 type ConfigureGridProps = {
-  initialCategories: NamedItem[];
+  initialCategories: CategoryItem[];
   initialAssetTypes: NamedItem[];
   initialDepartments: NamedItem[];
   initialWarrantyPeriods: WarrantyItem[];
@@ -38,14 +47,15 @@ type ConfigMeta = {
   icon: ComponentType<{ className?: string }>;
   listTitle: string;
   addTitle: string;
+  editTitle: string;
   nameLabel: string;
   namePlaceholder: string;
   createEndpoint: string;
-  deleteEndpoint: string;
+  itemEndpoint: string;
   successAddMessage: string;
-  successDeleteMessage: string;
-  parseCreate: (payload: unknown) => NamedItem | WarrantyItem | null;
-  parseDeleteErrorFallback: string;
+  successEditMessage: string;
+  successInactiveMessage: string;
+  successActiveMessage: string;
 };
 
 const CONFIG_META: ConfigMeta[] = [
@@ -55,17 +65,15 @@ const CONFIG_META: ConfigMeta[] = [
     icon: IconCategory,
     listTitle: "Categories",
     addTitle: "Add Category",
+    editTitle: "Edit Category",
     nameLabel: "Category Name",
     namePlaceholder: "Enter category name",
     createEndpoint: "/api/categories",
-    deleteEndpoint: "/api/categories",
+    itemEndpoint: "/api/categories",
     successAddMessage: "Category added.",
-    successDeleteMessage: "Category deleted.",
-    parseCreate: (payload) => {
-      const category = (payload as { category?: NamedItem })?.category;
-      return category?.id && category?.name ? category : null;
-    },
-    parseDeleteErrorFallback: "There is a product in this category, can't delete category now.",
+    successEditMessage: "Category updated.",
+    successInactiveMessage: "Category set inactive.",
+    successActiveMessage: "Category set active.",
   },
   {
     key: "assetType",
@@ -73,17 +81,15 @@ const CONFIG_META: ConfigMeta[] = [
     icon: IconAssetType,
     listTitle: "Asset Types",
     addTitle: "Add Asset Type",
+    editTitle: "Edit Asset Type",
     nameLabel: "Asset Type Name",
     namePlaceholder: "Enter asset type name",
     createEndpoint: "/api/asset-types",
-    deleteEndpoint: "/api/asset-types",
+    itemEndpoint: "/api/asset-types",
     successAddMessage: "Asset type added.",
-    successDeleteMessage: "Asset type deleted.",
-    parseCreate: (payload) => {
-      const assetType = (payload as { assetType?: NamedItem })?.assetType;
-      return assetType?.id && assetType?.name ? assetType : null;
-    },
-    parseDeleteErrorFallback: "There is a product in this asset type, can't delete now.",
+    successEditMessage: "Asset type updated.",
+    successInactiveMessage: "Asset type set inactive.",
+    successActiveMessage: "Asset type set active.",
   },
   {
     key: "department",
@@ -91,17 +97,15 @@ const CONFIG_META: ConfigMeta[] = [
     icon: IconDepartment,
     listTitle: "Departments",
     addTitle: "Add Department",
+    editTitle: "Edit Department",
     nameLabel: "Department Name",
     namePlaceholder: "Enter department name",
     createEndpoint: "/api/departments",
-    deleteEndpoint: "/api/departments",
+    itemEndpoint: "/api/departments",
     successAddMessage: "Department added.",
-    successDeleteMessage: "Department deleted.",
-    parseCreate: (payload) => {
-      const department = (payload as { department?: NamedItem })?.department;
-      return department?.id && department?.name ? department : null;
-    },
-    parseDeleteErrorFallback: "There are staff members in this department, can't delete now.",
+    successEditMessage: "Department updated.",
+    successInactiveMessage: "Department set inactive.",
+    successActiveMessage: "Department set active.",
   },
   {
     key: "warranty",
@@ -109,19 +113,19 @@ const CONFIG_META: ConfigMeta[] = [
     icon: IconWarranty,
     listTitle: "Warranty Periods",
     addTitle: "Add Warranty Period",
+    editTitle: "Edit Warranty Period",
     nameLabel: "Warranty Name",
     namePlaceholder: 'Enter warranty name (ex: "3 months")',
     createEndpoint: "/api/warranty-periods",
-    deleteEndpoint: "/api/warranty-periods",
+    itemEndpoint: "/api/warranty-periods",
     successAddMessage: "Warranty period added.",
-    successDeleteMessage: "Warranty period deleted.",
-    parseCreate: (payload) => {
-      const warrantyPeriod = (payload as { warrantyPeriod?: WarrantyItem })?.warrantyPeriod;
-      return warrantyPeriod?.id && warrantyPeriod?.name ? warrantyPeriod : null;
-    },
-    parseDeleteErrorFallback: "There are products using this warranty period, can't delete now.",
+    successEditMessage: "Warranty period updated.",
+    successInactiveMessage: "Warranty period set inactive.",
+    successActiveMessage: "Warranty period set active.",
   },
 ];
+
+type GenericItem = NamedItem | CategoryItem | WarrantyItem;
 
 export default function ConfigureGrid({
   initialCategories,
@@ -129,16 +133,19 @@ export default function ConfigureGrid({
   initialDepartments,
   initialWarrantyPeriods,
 }: ConfigureGridProps) {
-  const [categories, setCategories] = useState<NamedItem[]>(initialCategories);
+  const [categories, setCategories] = useState<CategoryItem[]>(initialCategories);
   const [assetTypes, setAssetTypes] = useState<NamedItem[]>(initialAssetTypes);
   const [departments, setDepartments] = useState<NamedItem[]>(initialDepartments);
   const [warrantyPeriods, setWarrantyPeriods] = useState<WarrantyItem[]>(initialWarrantyPeriods);
   const [activeType, setActiveType] = useState<ConfigType | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [editItemId, setEditItemId] = useState<string | null>(null);
   const [nameInput, setNameInput] = useState("");
+  const [prefixInput, setPrefixInput] = useState("");
+  const [categoryAssetTypeId, setCategoryAssetTypeId] = useState("");
   const [monthsInput, setMonthsInput] = useState("12");
   const [isSaving, setIsSaving] = useState(false);
-  const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
+  const [isTogglingId, setIsTogglingId] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastState>(null);
 
   const activeMeta = useMemo(
@@ -146,7 +153,7 @@ export default function ConfigureGrid({
     [activeType],
   );
 
-  const activeList = useMemo(() => {
+  const activeList = useMemo<GenericItem[]>(() => {
     if (activeType === "category") return categories;
     if (activeType === "assetType") return assetTypes;
     if (activeType === "department") return departments;
@@ -159,16 +166,63 @@ export default function ConfigureGrid({
     [activeList],
   );
 
+  const editingItem = useMemo(
+    () => (editItemId ? activeList.find((item) => item.id === editItemId) ?? null : null),
+    [activeList, editItemId],
+  );
+
   const showToast = (next: ToastState) => {
     setToast(next);
     setTimeout(() => setToast(null), 2800);
   };
 
+  const resetFormState = () => {
+    setNameInput("");
+    setPrefixInput("");
+    setCategoryAssetTypeId("");
+    setMonthsInput("12");
+    setEditItemId(null);
+  };
+
   const closeMainDialog = () => {
     setActiveType(null);
     setIsAddOpen(false);
-    setNameInput("");
-    setMonthsInput("12");
+    resetFormState();
+  };
+
+  const patchListItem = (id: string, updater: (prev: GenericItem) => GenericItem) => {
+    if (activeType === "category") {
+      setCategories((prev) => prev.map((item) => (item.id === id ? (updater(item) as CategoryItem) : item)));
+      return;
+    }
+    if (activeType === "assetType") {
+      setAssetTypes((prev) => prev.map((item) => (item.id === id ? (updater(item) as NamedItem) : item)));
+      return;
+    }
+    if (activeType === "department") {
+      setDepartments((prev) => prev.map((item) => (item.id === id ? (updater(item) as NamedItem) : item)));
+      return;
+    }
+    if (activeType === "warranty") {
+      setWarrantyPeriods((prev) => prev.map((item) => (item.id === id ? (updater(item) as WarrantyItem) : item)));
+    }
+  };
+
+  const onOpenAdd = () => {
+    resetFormState();
+    setIsAddOpen(true);
+  };
+
+  const onOpenEdit = (item: GenericItem) => {
+    setIsAddOpen(false);
+    setEditItemId(item.id);
+    setNameInput(item.name);
+    if ("months" in item) setMonthsInput(String(item.months));
+    if ("assetTypeName" in item) {
+      const matched = assetTypes.find((assetType) => assetType.name === item.assetTypeName);
+      setCategoryAssetTypeId(matched?.id ?? "");
+      setPrefixInput(item.prefix ?? "");
+    }
   };
 
   const onCreate = async (event: FormEvent<HTMLFormElement>) => {
@@ -176,25 +230,23 @@ export default function ConfigureGrid({
     if (!activeMeta || !activeType) return;
 
     const name = nameInput.trim();
-    if (!name) {
-      showToast({ type: "error", message: `${activeMeta.nameLabel} is required.` });
-      return;
+    if (!name) return showToast({ type: "error", message: `${activeMeta.nameLabel} is required.` });
+    if (activeType === "category" && !categoryAssetTypeId) {
+      return showToast({ type: "error", message: "Asset type is required for category." });
     }
-
     if (activeType === "warranty") {
       const months = Number(monthsInput);
-      if (!Number.isFinite(months) || months <= 0 || !Number.isInteger(months)) {
-        showToast({ type: "error", message: "Months must be a positive whole number." });
-        return;
+      if (!Number.isInteger(months) || months <= 0) {
+        return showToast({ type: "error", message: "Months must be a positive whole number." });
       }
     }
 
     const body =
       activeType === "warranty"
         ? { name, months: Number(monthsInput) }
-        : {
-            name,
-          };
+        : activeType === "category"
+          ? { name, assetTypeId: categoryAssetTypeId, prefix: prefixInput.trim() || null }
+          : { name };
 
     setIsSaving(true);
     try {
@@ -203,31 +255,23 @@ export default function ConfigureGrid({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
         showToast({ type: "error", message: payload?.error ?? `Failed to add ${activeMeta.label}.` });
         return;
       }
 
-      const created = activeMeta.parseCreate(payload);
-      if (!created) {
-        showToast({ type: "error", message: `Failed to parse ${activeMeta.label} response.` });
-        return;
-      }
-
       if (activeType === "category") {
-        setCategories((prev) => [...prev, created as NamedItem]);
+        setCategories((prev) => [...prev, payload.category]);
       } else if (activeType === "assetType") {
-        setAssetTypes((prev) => [...prev, created as NamedItem]);
+        setAssetTypes((prev) => [...prev, payload.assetType]);
       } else if (activeType === "department") {
-        setDepartments((prev) => [...prev, created as NamedItem]);
+        setDepartments((prev) => [...prev, payload.department]);
       } else {
-        setWarrantyPeriods((prev) => [...prev, created as WarrantyItem]);
+        setWarrantyPeriods((prev) => [...prev, payload.warrantyPeriod]);
       }
 
-      setNameInput("");
-      setMonthsInput("12");
+      resetFormState();
       setIsAddOpen(false);
       showToast({ type: "success", message: activeMeta.successAddMessage });
     } finally {
@@ -235,36 +279,80 @@ export default function ConfigureGrid({
     }
   };
 
-  const onDelete = async (id: string) => {
-    if (!activeMeta || !activeType) return;
+  const onEdit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!activeMeta || !activeType || !editingItem) return;
 
-    setIsDeletingId(id);
+    const name = nameInput.trim();
+    if (!name) return showToast({ type: "error", message: `${activeMeta.nameLabel} is required.` });
+
+    const body: Record<string, unknown> = { name };
+    if (activeType === "category") {
+      if (!categoryAssetTypeId) {
+        return showToast({ type: "error", message: "Asset type is required for category." });
+      }
+      body.assetTypeId = categoryAssetTypeId;
+      body.prefix = prefixInput.trim() || null;
+    }
+    if (activeType === "warranty") {
+      const months = Number(monthsInput);
+      if (!Number.isInteger(months) || months <= 0) {
+        return showToast({ type: "error", message: "Months must be a positive whole number." });
+      }
+      body.months = months;
+    }
+
+    setIsSaving(true);
     try {
-      const response = await fetch(`${activeMeta.deleteEndpoint}/${id}`, {
-        method: "DELETE",
+      const response = await fetch(`${activeMeta.itemEndpoint}/${editingItem.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
       });
       const payload = await response.json().catch(() => ({}));
-
       if (!response.ok) {
-        showToast({
-          type: "error",
-          message: payload?.error ?? activeMeta.parseDeleteErrorFallback,
-        });
+        showToast({ type: "error", message: payload?.error ?? `Failed to update ${activeMeta.label}.` });
         return;
       }
 
       if (activeType === "category") {
-        setCategories((prev) => prev.filter((item) => item.id !== id));
+        patchListItem(editingItem.id, () => payload.category);
       } else if (activeType === "assetType") {
-        setAssetTypes((prev) => prev.filter((item) => item.id !== id));
+        patchListItem(editingItem.id, () => payload.assetType);
       } else if (activeType === "department") {
-        setDepartments((prev) => prev.filter((item) => item.id !== id));
+        patchListItem(editingItem.id, () => payload.department);
       } else {
-        setWarrantyPeriods((prev) => prev.filter((item) => item.id !== id));
+        patchListItem(editingItem.id, () => payload.warrantyPeriod);
       }
-      showToast({ type: "success", message: activeMeta.successDeleteMessage });
+      resetFormState();
+      showToast({ type: "success", message: activeMeta.successEditMessage });
     } finally {
-      setIsDeletingId(null);
+      setIsSaving(false);
+    }
+  };
+
+  const onToggleActive = async (item: GenericItem) => {
+    if (!activeMeta || !activeType) return;
+    const nextActive = !item.isActive;
+    setIsTogglingId(item.id);
+    try {
+      const response = await fetch(`${activeMeta.itemEndpoint}/${item.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: nextActive }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        showToast({ type: "error", message: payload?.error ?? `Failed to update ${activeMeta.label}.` });
+        return;
+      }
+      patchListItem(item.id, (prev) => ({ ...prev, isActive: nextActive }));
+      showToast({
+        type: "success",
+        message: nextActive ? activeMeta.successActiveMessage : activeMeta.successInactiveMessage,
+      });
+    } finally {
+      setIsTogglingId(null);
     }
   };
 
@@ -305,18 +393,13 @@ export default function ConfigureGrid({
 
       {activeMeta && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center">
-          <button
-            type="button"
-            className="absolute inset-0 bg-black/40"
-            onClick={closeMainDialog}
-            aria-label={`Close ${activeMeta.label} dialog`}
-          />
+          <button type="button" className="absolute inset-0 bg-black/40" onClick={closeMainDialog} />
           <div className="relative w-full max-w-xl px-4" role="dialog" aria-modal="true">
             <div className="rounded-2xl border surface-card shadow-xl">
               <div className="flex items-center justify-between border-b border-gray-200 px-5 py-4">
                 <div className="text-base font-semibold text-gray-900">{activeMeta.listTitle}</div>
                 <div className="flex items-center gap-2">
-                  <Button type="button" onClick={() => setIsAddOpen(true)}>
+                  <Button type="button" onClick={onOpenAdd}>
                     + Add
                   </Button>
                   <button
@@ -337,16 +420,38 @@ export default function ConfigureGrid({
                       className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2"
                     >
                       <div className="text-sm font-medium text-gray-900">
-                        {"months" in item ? `${item.name} (${item.months} months)` : item.name}
+                        <span className={item.isActive ? "" : "text-gray-400 line-through"}>
+                          {"months" in item
+                            ? `${item.name} (${item.months} months)`
+                            : "assetTypeName" in item
+                              ? `${item.name}${item.prefix ? ` [${item.prefix}]` : ""} (${item.assetTypeName ?? "No asset type"})`
+                              : item.name}
+                        </span>
                       </div>
-                      <button
-                        type="button"
-                        className="rounded-md px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-60"
-                        onClick={() => onDelete(item.id)}
-                        disabled={isDeletingId === item.id}
-                      >
-                        {isDeletingId === item.id ? "Deleting..." : "Delete"}
-                      </button>
+                      <div className="inline-flex items-center gap-1">
+                        <button
+                          type="button"
+                          className="rounded-md px-2 py-1 text-gray-700 hover:bg-gray-100"
+                          onClick={() => onOpenEdit(item)}
+                          aria-label={`Edit ${item.name}`}
+                        >
+                          <IconPencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          className={`rounded-md px-2 py-1 text-xs font-medium ${
+                            item.isActive ? "text-red-700 hover:bg-red-50" : "text-green-700 hover:bg-green-50"
+                          }`}
+                          onClick={() => onToggleActive(item)}
+                          disabled={isTogglingId === item.id}
+                        >
+                          {item.isActive ? (
+                            <span className="inline-flex items-center gap-1"><IconBan className="h-4 w-4" />Inactive</span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1"><IconCheck className="h-4 w-4" />Active</span>
+                          )}
+                        </button>
+                      </div>
                     </div>
                   ))}
                   {sortedActiveList.length === 0 && (
@@ -361,12 +466,7 @@ export default function ConfigureGrid({
 
       {activeMeta && isAddOpen && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center">
-          <button
-            type="button"
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setIsAddOpen(false)}
-            aria-label={`Close add ${activeMeta.label} dialog`}
-          />
+          <button type="button" className="absolute inset-0 bg-black/50" onClick={() => setIsAddOpen(false)} />
           <div className="relative w-full max-w-md px-4" role="dialog" aria-modal="true">
             <div className="rounded-2xl border surface-card shadow-xl">
               <div className="border-b border-gray-200 px-5 py-4">
@@ -383,6 +483,35 @@ export default function ConfigureGrid({
                   />
                 </label>
 
+                {activeType === "category" && (
+                  <>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Category Prefix (for SKU)
+                      <input
+                        value={prefixInput}
+                        onChange={(event) => setPrefixInput(event.target.value)}
+                        className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                        placeholder="Ex: LAP, LPT"
+                      />
+                    </label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Asset Type
+                      <select
+                        value={categoryAssetTypeId}
+                        onChange={(event) => setCategoryAssetTypeId(event.target.value)}
+                        className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"
+                      >
+                        <option value="">Select asset type</option>
+                        {assetTypes.filter((item) => item.isActive).map((assetType) => (
+                          <option key={assetType.id} value={assetType.id}>
+                            {assetType.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </>
+                )}
+
                 {activeType === "warranty" && (
                   <label className="block text-sm font-medium text-gray-700">
                     Months
@@ -392,7 +521,6 @@ export default function ConfigureGrid({
                       value={monthsInput}
                       onChange={(event) => setMonthsInput(event.target.value)}
                       className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                      placeholder="Enter months (ex: 3, 6, 12)"
                     />
                   </label>
                 )}
@@ -402,6 +530,84 @@ export default function ConfigureGrid({
                     type="button"
                     className="rounded-md px-3 py-2 text-sm text-gray-600 hover:bg-gray-100"
                     onClick={() => setIsAddOpen(false)}
+                  >
+                    Cancel
+                  </button>
+                  <Button type="submit" disabled={isSaving}>
+                    {isSaving ? "Saving..." : "Save"}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeMeta && editingItem && (
+        <div className="fixed inset-0 z-[75] flex items-center justify-center">
+          <button type="button" className="absolute inset-0 bg-black/50" onClick={resetFormState} />
+          <div className="relative w-full max-w-md px-4" role="dialog" aria-modal="true">
+            <div className="rounded-2xl border surface-card shadow-xl">
+              <div className="border-b border-gray-200 px-5 py-4">
+                <div className="text-base font-semibold text-gray-900">{activeMeta.editTitle}</div>
+              </div>
+              <form className="space-y-4 px-5 py-4" onSubmit={onEdit}>
+                <label className="block text-sm font-medium text-gray-700">
+                  {activeMeta.nameLabel}
+                  <input
+                    value={nameInput}
+                    onChange={(event) => setNameInput(event.target.value)}
+                    className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  />
+                </label>
+
+                {activeType === "category" && (
+                  <>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Category Prefix (for SKU)
+                      <input
+                        value={prefixInput}
+                        onChange={(event) => setPrefixInput(event.target.value)}
+                        className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                        placeholder="Ex: LAP, LPT"
+                      />
+                    </label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Asset Type
+                      <select
+                        value={categoryAssetTypeId}
+                        onChange={(event) => setCategoryAssetTypeId(event.target.value)}
+                        className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"
+                      >
+                        <option value="">Select asset type</option>
+                        {assetTypes.map((assetType) => (
+                          <option key={assetType.id} value={assetType.id}>
+                            {assetType.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </>
+                )}
+
+                {activeType === "warranty" && (
+                  <label className="block text-sm font-medium text-gray-700">
+                    Months
+                    <input
+                      type="number"
+                      min={1}
+                      value={monthsInput}
+                      onChange={(event) => setMonthsInput(event.target.value)}
+                      className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    />
+                  </label>
+                )}
+
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    className="rounded-md px-3 py-2 text-sm text-gray-600 hover:bg-gray-100"
+                    onClick={resetFormState}
                   >
                     Cancel
                   </button>
