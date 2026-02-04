@@ -6,6 +6,7 @@ import AssignProductModal from "~/app/components/staff/assign-product-modal";
 import ReturnProductModal from "~/app/components/staff/return-product-modal";
 import Button from "~/app/components/ui/button";
 import { IconReturn } from "~/app/components/ui/icons";
+import LiveSearchInput from "~/app/components/ui/live-search-input";
 import {
   Pagination,
   PaginationContent,
@@ -55,15 +56,17 @@ type StaffClientProps = {
   currentPage: number;
   q: string;
   products: ProductOption[];
-  departments: string[];
+  departments: Array<{ id: string; name: string }>;
 };
 
 const toLabel = (value: string) =>
-  value
-    .toLowerCase()
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
+  value.includes("_")
+    ? value
+        .toLowerCase()
+        .split("_")
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(" ")
+    : value;
 
 export default function StaffClient({
   staff,
@@ -90,14 +93,11 @@ export default function StaffClient({
 
       <div className="flex items-center gap-3">
         <AddStaffModal products={products} departments={departments} />
-        <form action="/dashboard/users" method="get" className="flex items-center gap-3">
-          <input
-            name="q"
-            defaultValue={q}
-            placeholder="Search staff..."
-            className="w-80 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-          />
-        </form>
+        <LiveSearchInput
+          defaultValue={q}
+          placeholder="Search staff..."
+          className="w-80"
+        />
         <div className="ml-auto">
           <AssignProductModal
             products={products}

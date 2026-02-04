@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { Department } from "@prisma/client";
 import { prisma } from "~/lib/prisma";
 import { IconEye } from "~/app/components/ui/icons";
+import LiveSearchInput from "~/app/components/ui/live-search-input";
 import {
   Table,
   TableBody,
@@ -56,18 +56,24 @@ export default async function StaffReportPage({
   const q = getParam(resolvedSearchParams?.q);
   const staffId = getParam(resolvedSearchParams?.staffId);
 
-  const normalizedQ = q.trim().toUpperCase().replace(/\s+/g, "_");
-  const departmentMatch = Object.values(Department).includes(
-    normalizedQ as Department,
-  )
-    ? (normalizedQ as Department)
-    : null;
+  const departmentMatch = q.trim();
 
   const where = q
     ? {
         OR: [
           { name: { contains: q, mode: "insensitive" as const } },
-          ...(departmentMatch ? [{ department: departmentMatch }] : []),
+          ...(departmentMatch
+            ? [
+                {
+                  department: {
+                    OR: [
+                      { name: { contains: q, mode: "insensitive" as const } },
+                      { code: { contains: q, mode: "insensitive" as const } },
+                    ],
+                  },
+                },
+              ]
+            : []),
         ],
       }
     : undefined;
@@ -76,13 +82,17 @@ export default async function StaffReportPage({
     where,
     orderBy: { updatedAt: "desc" },
     take: 25,
-    include: { _count: { select: { inventoryUsing: true } } },
+    include: {
+      department: { select: { code: true, name: true } },
+      _count: { select: { inventoryUsing: true } },
+    },
   });
 
   const selectedStaff = staffId
     ? await prisma.staff.findUnique({
         where: { id: staffId },
         include: {
+          department: { select: { code: true, name: true } },
           inventoryUsing: {
             orderBy: { startDate: "desc" },
             include: {
@@ -139,16 +149,12 @@ export default async function StaffReportPage({
       </div>
 
       <div className="rounded-2xl border bg-white p-4 shadow-sm">
-        <form
-          action="/dashboard/reports/staff"
-          method="get"
-          className="flex flex-wrap items-center gap-2"
-        >
-          <input
-            name="q"
+        <div className="flex flex-wrap items-center gap-2">
+          <LiveSearchInput
             defaultValue={q}
             placeholder="Search staff by name (or department)..."
-            className="h-10 w-full min-w-[240px] flex-1 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            className="w-80"
+            clearParamsOnChange={["staffId"]}
           />
           {staffId && (
             <Link
@@ -158,7 +164,7 @@ export default async function StaffReportPage({
               Clear
             </Link>
           )}
-        </form>
+        </div>
         <div className="mt-2 text-xs text-gray-500">
           {q ? "Select a staff member from the results below." : "Start typing to search."}
         </div>
@@ -181,7 +187,7 @@ export default async function StaffReportPage({
                     {member.name}
                   </TableCell>
                   <TableCell className="text-gray-700">
-                    {toLabel(member.department)}
+                    {member.department.name}
                     <div className="text-xs text-gray-500">
                       Total assignments: {member._count.inventoryUsing}
                     </div>
@@ -224,7 +230,7 @@ export default async function StaffReportPage({
                 <div className="mt-1 text-sm text-gray-600">
                   Department:{" "}
                   <span className="font-medium">
-                    {toLabel(selectedStaff.department)}
+                    {selectedStaff.department.name}
                   </span>
                 </div>
               </div>

@@ -14,20 +14,6 @@ enum ProductStatus {
   UNDER_SERVICE
 }
 
-enum WarrantyPeriod {
-  THREE_MONTHS
-  SIX_MONTHS
-  ONE_YEAR
-}
-
-enum Department {
-  IT
-  FINANCE
-  HR
-  OPERATIONS
-  SALES
-}
-
 enum ReturnReason {
   RESIGNED
   DAMAGED
@@ -38,7 +24,9 @@ enum ReturnReason {
 model User {
   id         String   @id @default(cuid())
   name       String   @unique
+  email      String?  @unique
   password   String   
+  isActive   Boolean  @default(true)
 
   createdBy  String?
   createdAt  DateTime @default(now())
@@ -59,7 +47,8 @@ model Product {
   specification String?
   orderedDate   DateTime?
   cost          Decimal?
-  warranty      WarrantyPeriod?
+  warrantyPeriodId String?
+  warrantyPeriod WarrantyPeriodModel? @relation(fields: [warrantyPeriodId], references: [id])
   warrantyExpire DateTime?
 
   categoryId    String
@@ -94,11 +83,27 @@ model AssetType {
 model Staff {
   id        String           @id @default(cuid())
   name      String
-  department Department
+  departmentId String
+  department DepartmentModel @relation(fields: [departmentId], references: [id])
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
 
   inventoryUsing StaffInventory[]
+}
+
+model DepartmentModel {
+  id       String   @id @default(cuid())
+  code     String   @unique
+  name     String   @unique
+  staffs   Staff[]
+}
+
+model WarrantyPeriodModel {
+  id       String    @id @default(cuid())
+  code     String    @unique
+  name     String    @unique
+  months   Int
+  products Product[]
 }
 
 model StaffInventory {

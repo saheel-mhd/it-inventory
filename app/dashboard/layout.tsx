@@ -12,11 +12,11 @@ export default async function DashboardLayout({
   const user = sessionId
     ? await prisma.user.findUnique({
         where: { id: sessionId },
-        select: { id: true },
+        select: { id: true, isActive: true },
       })
     : null;
 
-  if (!user) {
+  if (!user || !user.isActive) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
         <div className="w-full max-w-lg rounded-2xl border surface-card p-6 text-center shadow-sm">

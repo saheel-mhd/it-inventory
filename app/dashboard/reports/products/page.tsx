@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "~/lib/prisma";
 import { IconEye } from "~/app/components/ui/icons";
+import LiveSearchInput from "~/app/components/ui/live-search-input";
 import {
   Table,
   TableBody,
@@ -27,14 +28,6 @@ const STATUS_COLORS: Record<string, string> = {
   ACTIVE_USE: "bg-blue-500",
   UNDER_SERVICE: "bg-orange-500",
   SERVICEABLE: "bg-yellow-500",
-};
-
-const warrantyLabel = (value: string | null | undefined) => {
-  if (!value) return "-";
-  if (value === "THREE_MONTHS") return "3 Months";
-  if (value === "SIX_MONTHS") return "6 Months";
-  if (value === "ONE_YEAR") return "1 Year";
-  return value;
 };
 
 const toLabel = (value: string) =>
@@ -101,9 +94,10 @@ export default async function ProductReportPage({
         include: {
           category: true,
           assetType: true,
+          warrantyPeriod: true,
           staffAssignments: {
             orderBy: { startDate: "desc" },
-            include: { staff: true },
+            include: { staff: { include: { department: true } } },
           },
           services: { orderBy: { createdAt: "desc" } },
         },
@@ -153,16 +147,12 @@ export default async function ProductReportPage({
       </div>
 
       <div className="rounded-2xl border bg-white p-4 shadow-sm">
-        <form
-          action="/dashboard/reports/products"
-          method="get"
-          className="flex flex-wrap items-center gap-2"
-        >
-          <input
-            name="q"
+        <div className="flex flex-wrap items-center gap-2">
+          <LiveSearchInput
             defaultValue={q}
             placeholder="Search by product name or SKU..."
-            className="h-10 w-full min-w-[240px] flex-1 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+            className="w-80"
+            clearParamsOnChange={["productId"]}
           />
           {productId && (
             <Link
@@ -172,7 +162,7 @@ export default async function ProductReportPage({
               Clear
             </Link>
           )}
-        </form>
+        </div>
         <div className="mt-2 text-xs text-gray-500">
           {q ? "Select a product from the results below." : "Start typing to search."}
         </div>
@@ -245,7 +235,10 @@ export default async function ProductReportPage({
               <Field label="Asset Type" value={selectedProduct.assetType?.name ?? "-"} />
               <Field label="Ordered Date" value={formatDate(selectedProduct.orderedDate)} />
               <Field label="Cost" value={selectedProduct.cost?.toString() ?? "-"} />
-              <Field label="Warranty" value={warrantyLabel(selectedProduct.warranty)} />
+              <Field
+                label="Warranty"
+                value={selectedProduct.warrantyPeriod?.name ?? "-"}
+              />
               <Field
                 label="Warranty Expire"
                 value={formatDate(selectedProduct.warrantyExpire)}
@@ -288,7 +281,7 @@ export default async function ProductReportPage({
                         <TableCell className="font-medium text-gray-900">
                           {assignment.staff.name}
                         </TableCell>
-                        <TableCell>{toLabel(assignment.staff.department)}</TableCell>
+                        <TableCell>{assignment.staff.department.name}</TableCell>
                         <TableCell>{formatDate(assignment.startDate)}</TableCell>
                         <TableCell>
                           {assignment.returnDate

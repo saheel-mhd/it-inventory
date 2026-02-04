@@ -12,7 +12,7 @@ type ProductOption = {
 
 type AddStaffModalProps = {
   products: ProductOption[];
-  departments: string[];
+  departments: Array<{ id: string; name: string }>;
 };
 
 type AssignmentRow = {
@@ -81,7 +81,7 @@ export default function AddStaffModal({ products, departments }: AddStaffModalPr
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: name.trim(),
-          department,
+          departmentId: department,
           assignments: cleanedRows.map((row) => ({
             productId: row.productId,
             quantity: Number(row.quantity || 1),
@@ -154,8 +154,8 @@ export default function AddStaffModal({ products, departments }: AddStaffModalPr
                     >
                       <option value="">Select department</option>
                       {departments.map((dept) => (
-                        <option key={dept} value={dept}>
-                          {toLabel(dept)}
+                        <option key={dept.id} value={dept.id}>
+                          {dept.name}
                         </option>
                       ))}
                     </select>
@@ -247,9 +247,3 @@ export default function AddStaffModal({ products, departments }: AddStaffModalPr
     </>
   );
 }
-const toLabel = (value: string) =>
-  value
-    .toLowerCase()
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");

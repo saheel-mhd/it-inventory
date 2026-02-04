@@ -11,6 +11,7 @@ type Option = {
 type AddItemFormProps = {
   categories: Option[];
   assetTypes: Option[];
+  warrantyPeriods: Array<{ id: string; name: string; months: number }>;
   onCreated?: () => void;
 };
 
@@ -22,7 +23,7 @@ type FormState = {
   specification: string;
   orderedDate: string;
   cost: string;
-  warranty: string;
+  warrantyPeriodId: string;
   warrantyExpire: string;
   categoryId: string;
   assetTypeId: string;
@@ -38,29 +39,16 @@ const emptyForm: FormState = {
   specification: "",
   orderedDate: "",
   cost: "",
-  warranty: "",
+  warrantyPeriodId: "",
   warrantyExpire: "",
   categoryId: "",
   assetTypeId: "",
 };
 
-const WARRANTY_OPTIONS = [
-  { value: "", label: "No warranty" },
-  { value: "THREE_MONTHS", label: "3 months" },
-  { value: "SIX_MONTHS", label: "6 months" },
-  { value: "ONE_YEAR", label: "1 year" },
-];
-
-const getWarrantyMonths = (value: string) => {
-  if (value === "THREE_MONTHS") return 3;
-  if (value === "SIX_MONTHS") return 6;
-  if (value === "ONE_YEAR") return 12;
-  return 0;
-};
-
 export default function AddItemForm({
   categories,
   assetTypes,
+  warrantyPeriods,
   onCreated,
 }: AddItemFormProps) {
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -72,12 +60,13 @@ export default function AddItemForm({
   };
 
   useEffect(() => {
-    if (!form.warranty) {
+    if (!form.warrantyPeriodId) {
       setForm((prev) => ({ ...prev, warrantyExpire: "" }));
       return;
     }
 
-    const months = getWarrantyMonths(form.warranty);
+    const period = warrantyPeriods.find((item) => item.id === form.warrantyPeriodId);
+    const months = period?.months ?? 0;
     if (months === 0) return;
     const baseDate = form.orderedDate
       ? new Date(form.orderedDate)
@@ -88,7 +77,7 @@ export default function AddItemForm({
       ...prev,
       warrantyExpire: nextDate.toISOString().slice(0, 10),
     }));
-  }, [form.warranty, form.orderedDate]);
+  }, [form.warrantyPeriodId, form.orderedDate, warrantyPeriods]);
 
   const validate = () => {
     const nextErrors: FormErrors = {};
@@ -249,13 +238,14 @@ export default function AddItemForm({
           Warranty
           <select
             className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"
-            name="warranty"
-            value={form.warranty}
-            onChange={setField("warranty")}
+            name="warrantyPeriodId"
+            value={form.warrantyPeriodId}
+            onChange={setField("warrantyPeriodId")}
           >
-            {WARRANTY_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
+            <option value="">No warranty</option>
+            {warrantyPeriods.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.name}
               </option>
             ))}
           </select>

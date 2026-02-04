@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { prisma } from "~/lib/prisma";
-import { Department } from "@prisma/client";
 
 type AssignmentPayload = {
   productId: string;
@@ -10,7 +9,7 @@ type AssignmentPayload = {
 
 type StaffPayload = {
   name?: string;
-  department?: string;
+  departmentId?: string;
   assignments?: AssignmentPayload[];
 };
 
@@ -20,7 +19,7 @@ export async function POST(request: Request) {
   if (!body.name?.trim()) {
     return NextResponse.json({ error: "Name is required." }, { status: 400 });
   }
-  if (!body.department) {
+  if (!body.departmentId) {
     return NextResponse.json({ error: "Department is required." }, { status: 400 });
   }
   if (!body.assignments || body.assignments.length === 0) {
@@ -28,14 +27,22 @@ export async function POST(request: Request) {
   }
 
   const staffName = body.name.trim();
-  const department = body.department as Department;
+  const departmentId = body.departmentId;
   const assignments = body.assignments;
+
+  const department = await prisma.departmentModel.findUnique({
+    where: { id: departmentId },
+    select: { id: true },
+  });
+  if (!department) {
+    return NextResponse.json({ error: "Department not found." }, { status: 404 });
+  }
 
   const staff = await prisma.$transaction(async (tx) => {
     const created = await tx.staff.create({
       data: {
         name: staffName,
-        department,
+        departmentId: department.id,
         inventoryUsing: {
           create: assignments.map((assignment) => ({
             productId: assignment.productId,

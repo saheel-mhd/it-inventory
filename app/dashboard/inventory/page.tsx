@@ -15,13 +15,14 @@ const STATUS_OPTIONS = Object.entries(STATUS_LABELS).map(([value, label]) => ({
 }));
 
 export default async function InventoryPage() {
-  const [products, categories, assetTypes, staffOptions, assignProducts] =
+  const [products, categories, assetTypes, warrantyPeriods, staffOptions, assignProducts] =
     await Promise.all([
     prisma.product.findMany({
       orderBy: { updatedAt: "desc" },
       include: {
         category: true,
         assetType: true,
+        warrantyPeriod: true,
         staffAssignments: {
           where: { returnDate: null },
           orderBy: { startDate: "desc" },
@@ -32,6 +33,10 @@ export default async function InventoryPage() {
     }),
     prisma.category.findMany({ orderBy: { name: "asc" } }),
     prisma.assetType.findMany({ orderBy: { name: "asc" } }),
+    prisma.warrantyPeriodModel.findMany({
+      orderBy: { months: "asc" },
+      select: { id: true, name: true, months: true },
+    }),
     prisma.staff.findMany({
       orderBy: { name: "asc" },
       select: { id: true, name: true },
@@ -56,6 +61,7 @@ export default async function InventoryPage() {
       return {
         ...rest,
         assignedTo: assignedName,
+        warrantyName: rest.warrantyPeriod?.name ?? null,
         activeAssignmentId,
         status,
       };
@@ -76,6 +82,7 @@ export default async function InventoryPage() {
       initialProducts={serializedProducts}
       categories={categories}
       assetTypes={assetTypes}
+      warrantyPeriods={warrantyPeriods}
       statusOptions={STATUS_OPTIONS}
       staffOptions={staffOptions}
       assignProducts={assignProducts}

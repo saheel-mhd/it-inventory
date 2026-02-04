@@ -30,7 +30,8 @@ type Product = {
   specification: string | null;
   orderedDate: string | null;
   cost: string | null;
-  warranty: string | null;
+  warrantyPeriodId: string | null;
+  warrantyName: string | null;
   warrantyExpire: string | null;
   categoryId: string;
   assetTypeId: string;
@@ -46,6 +47,7 @@ type InventoryClientProps = {
   initialProducts: Product[];
   categories: Option[];
   assetTypes: Option[];
+  warrantyPeriods: Array<{ id: string; name: string; months: number }>;
   statusOptions: Array<{ value: string; label: string }>;
   assignProducts: Array<{ id: string; sku: string; product: string }>;
   staffOptions: Array<{ id: string; name: string }>;
@@ -63,6 +65,7 @@ export default function InventoryClient({
   initialProducts,
   categories,
   assetTypes,
+  warrantyPeriods,
   statusOptions,
   assignProducts,
   staffOptions,
@@ -121,6 +124,7 @@ export default function InventoryClient({
       <InventoryToolbar
         categories={categories}
         assetTypes={assetTypes}
+        warrantyPeriods={warrantyPeriods}
         statusOptions={statusOptions}
         assignProducts={assignProducts}
         staffOptions={staffOptions}
@@ -320,7 +324,7 @@ export default function InventoryClient({
                     Warranty
                   </div>
                   <div className="text-sm text-gray-900">
-                    {selectedProduct.warranty ?? "-"}
+                    {selectedProduct.warrantyName ?? "-"}
                   </div>
                 </div>
                 <div className="space-y-1">
@@ -401,7 +405,7 @@ export default function InventoryClient({
                 specification: editProduct.specification,
                 orderedDate: editProduct.orderedDate,
                 cost: editProduct.cost,
-                warranty: editProduct.warranty,
+                warrantyPeriodId: editProduct.warrantyPeriodId,
                 warrantyExpire: editProduct.warrantyExpire,
                 categoryId: editProduct.categoryId,
                 assetTypeId: editProduct.assetTypeId,
@@ -411,6 +415,7 @@ export default function InventoryClient({
         }
         categories={categories}
         assetTypes={assetTypes}
+        warrantyPeriods={warrantyPeriods}
         statusOptions={statusOptions}
         onClose={() => setEditProduct(null)}
         onSaved={() => loadProducts(queryString)}

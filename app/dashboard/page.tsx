@@ -54,22 +54,18 @@ export default async function DashboardPage() {
 
     if (product.status === "DAMAGED") {
       totalDamagedValue += costValue;
-      stats && (stats.damagedCount += 1);
+      if (stats) stats.damagedCount += 1;
     } else {
       totalInventoryValue += costValue;
-      stats && (stats.value += costValue);
+      if (stats) stats.value += costValue;
 
       if (product.status === "AVAILABLE" || product.status === "SERVICEABLE") {
-        stats && (stats.inventoryCount += 1);
+        if (stats) stats.inventoryCount += 1;
       } else if (product.status === "ACTIVE_USE") {
-        stats && (stats.inUseCount += 1);
+        if (stats) stats.inUseCount += 1;
       } else if (product.status === "UNDER_SERVICE") {
-        stats && (stats.inServiceCount += 1);
+        if (stats) stats.inServiceCount += 1;
       }
-    }
-
-    if (product.status === "DAMAGED" && stats) {
-      stats.damagedCount += 0;
     }
   });
 

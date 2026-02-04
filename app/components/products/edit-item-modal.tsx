@@ -22,7 +22,7 @@ type ProductData = {
   specification: string | null;
   orderedDate: string | null;
   cost: string | null;
-  warranty: string | null;
+  warrantyPeriodId: string | null;
   warrantyExpire: string | null;
   categoryId: string;
   assetTypeId: string;
@@ -34,6 +34,7 @@ type EditItemModalProps = {
   product: ProductData | null;
   categories: Option[];
   assetTypes: Option[];
+  warrantyPeriods: Array<{ id: string; name: string; months: number }>;
   statusOptions: ProductStatusOption[];
   onClose: () => void;
   onSaved?: () => void;
@@ -47,7 +48,7 @@ type FormState = {
   specification: string;
   orderedDate: string;
   cost: string;
-  warranty: string;
+  warrantyPeriodId: string;
   warrantyExpire: string;
   categoryId: string;
   assetTypeId: string;
@@ -55,20 +56,6 @@ type FormState = {
 };
 
 type FormErrors = Partial<Record<keyof FormState | "general", string>>;
-
-const WARRANTY_OPTIONS = [
-  { value: "", label: "No warranty" },
-  { value: "THREE_MONTHS", label: "3 months" },
-  { value: "SIX_MONTHS", label: "6 months" },
-  { value: "ONE_YEAR", label: "1 year" },
-];
-
-const getWarrantyMonths = (value: string) => {
-  if (value === "THREE_MONTHS") return 3;
-  if (value === "SIX_MONTHS") return 6;
-  if (value === "ONE_YEAR") return 12;
-  return 0;
-};
 
 const emptyForm: FormState = {
   product: "",
@@ -78,7 +65,7 @@ const emptyForm: FormState = {
   specification: "",
   orderedDate: "",
   cost: "",
-  warranty: "",
+  warrantyPeriodId: "",
   warrantyExpire: "",
   categoryId: "",
   assetTypeId: "",
@@ -90,6 +77,7 @@ export default function EditItemModal({
   product,
   categories,
   assetTypes,
+  warrantyPeriods,
   statusOptions,
   onClose,
   onSaved,
@@ -108,7 +96,7 @@ export default function EditItemModal({
       specification: product.specification ?? "",
       orderedDate: product.orderedDate ?? "",
       cost: product.cost ?? "",
-      warranty: product.warranty ?? "",
+      warrantyPeriodId: product.warrantyPeriodId ?? "",
       warrantyExpire: product.warrantyExpire ?? "",
       categoryId: product.categoryId ?? "",
       assetTypeId: product.assetTypeId ?? "",
@@ -118,12 +106,13 @@ export default function EditItemModal({
   }, [product]);
 
   useEffect(() => {
-    if (!form.warranty) {
+    if (!form.warrantyPeriodId) {
       setForm((prev) => ({ ...prev, warrantyExpire: "" }));
       return;
     }
 
-    const months = getWarrantyMonths(form.warranty);
+    const period = warrantyPeriods.find((item) => item.id === form.warrantyPeriodId);
+    const months = period?.months ?? 0;
     if (months === 0) return;
     const baseDate = form.orderedDate
       ? new Date(form.orderedDate)
@@ -134,7 +123,7 @@ export default function EditItemModal({
       ...prev,
       warrantyExpire: nextDate.toISOString().slice(0, 10),
     }));
-  }, [form.warranty, form.orderedDate]);
+  }, [form.warrantyPeriodId, form.orderedDate, warrantyPeriods]);
 
   const setField =
     (field: keyof FormState) =>
@@ -175,7 +164,7 @@ export default function EditItemModal({
           specification: form.specification || null,
           orderedDate: form.orderedDate || null,
           cost: form.cost || null,
-          warranty: form.warranty || null,
+          warrantyPeriodId: form.warrantyPeriodId || null,
           warrantyExpire: form.warrantyExpire || null,
         }),
       });
@@ -306,12 +295,13 @@ export default function EditItemModal({
                   Warranty
                   <select
                     className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"
-                    value={form.warranty}
-                    onChange={setField("warranty")}
+                    value={form.warrantyPeriodId}
+                    onChange={setField("warrantyPeriodId")}
                   >
-                    {WARRANTY_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
+                    <option value="">No warranty</option>
+                    {warrantyPeriods.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.name}
                       </option>
                     ))}
                   </select>

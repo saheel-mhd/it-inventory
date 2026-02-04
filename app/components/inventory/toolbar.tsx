@@ -4,6 +4,7 @@ import { useState } from "react";
 import Button from "~/app/components/ui/button";
 import AddItemForm from "~/app/components/add-item-form";
 import AssignProductModal from "~/app/components/staff/assign-product-modal";
+import SearchInput from "~/app/components/ui/search-input";
 
 type Option = {
   id: string;
@@ -13,6 +14,7 @@ type Option = {
 type InventoryToolbarProps = {
   categories: Option[];
   assetTypes: Option[];
+  warrantyPeriods: Array<{ id: string; name: string; months: number }>;
   statusOptions: Array<{ value: string; label: string }>;
   assignProducts: Array<{ id: string; sku: string; product: string }>;
   staffOptions: Array<{ id: string; name: string }>;
@@ -30,6 +32,7 @@ type InventoryToolbarProps = {
 export default function InventoryToolbar({
   categories,
   assetTypes,
+  warrantyPeriods,
   statusOptions,
   assignProducts,
   staffOptions,
@@ -48,11 +51,10 @@ export default function InventoryToolbar({
             + Add Item
           </Button>
 
-          <input
+          <SearchInput
             name="q"
             value={filters.q}
             placeholder="Search inventory..."
-            className="w-80 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
             onChange={(event) =>
               onFilterChange({ ...filters, q: event.target.value })
             }
@@ -151,6 +153,7 @@ export default function InventoryToolbar({
                 <AddItemForm
                   categories={categories}
                   assetTypes={assetTypes}
+                  warrantyPeriods={warrantyPeriods}
                   onCreated={() => {
                     setIsOpen(false);
                     onCreated();

@@ -10,7 +10,7 @@ type Payload = {
   specification?: string;
   orderedDate?: string;
   cost?: string;
-  warranty?: "THREE_MONTHS" | "SIX_MONTHS" | "ONE_YEAR";
+  warrantyPeriodId?: string;
   warrantyExpire?: string;
   categoryId?: string;
   assetTypeId?: string;
@@ -29,9 +29,6 @@ export async function POST(request: Request) {
   if (Object.keys(errors).length > 0) {
     return NextResponse.json({ errors }, { status: 400 });
   }
-
-  const warrantyValue =
-    body.warranty && body.warranty.length > 0 ? body.warranty : null;
 
   try {
     const orderedDate = body.orderedDate ? new Date(body.orderedDate) : null;
@@ -68,7 +65,7 @@ export async function POST(request: Request) {
         specification: body.specification?.trim() || null,
         orderedDate,
         cost,
-        warranty: warrantyValue,
+        warrantyPeriodId: body.warrantyPeriodId || null,
         warrantyExpire,
         categoryId: body.categoryId!,
         assetTypeId: body.assetTypeId!,
@@ -92,6 +89,7 @@ export async function POST(request: Request) {
             errors: {
               categoryId: "Invalid category.",
               assetTypeId: "Invalid asset type.",
+              warrantyPeriodId: "Invalid warranty period.",
             },
           },
           { status: 400 },
@@ -152,6 +150,7 @@ export async function GET(request: Request) {
     include: {
       category: true,
       assetType: true,
+      warrantyPeriod: true,
       staffAssignments: {
         where: { returnDate: null },
         orderBy: { startDate: "desc" },
@@ -174,6 +173,7 @@ export async function GET(request: Request) {
       return {
         ...rest,
         assignedTo: assignedName,
+        warrantyName: rest.warrantyPeriod?.name ?? null,
         activeAssignmentId,
         status,
       };

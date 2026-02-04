@@ -24,7 +24,7 @@ export async function POST(req: Request) {
 
     const user = await prisma.user.findUnique({
       where: { name: username },
-      select: { id: true, password: true },
+      select: { id: true, password: true, isActive: true },
     });
 
     if (!user) {
@@ -34,6 +34,13 @@ export async function POST(req: Request) {
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) {
       return NextResponse.json({ ok: false, message: "Invalid credentials." }, { status: 401 });
+    }
+
+    if (!user.isActive) {
+      return NextResponse.json(
+        { ok: false, message: "Your account is inactive. Contact admin." },
+        { status: 403 },
+      );
     }
 
     await prisma.user.update({

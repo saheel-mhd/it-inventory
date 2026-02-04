@@ -10,7 +10,7 @@ type Payload = {
   specification?: string | null;
   orderedDate?: string | null;
   cost?: string | null;
-  warranty?: "THREE_MONTHS" | "SIX_MONTHS" | "ONE_YEAR" | null;
+  warrantyPeriodId?: string | null;
   warrantyExpire?: string | null;
   categoryId?: string;
   assetTypeId?: string;
@@ -57,6 +57,7 @@ export async function PATCH(
   if (Object.keys(errors).length > 0) {
     return NextResponse.json({ errors }, { status: 400 });
   }
+  const statusValue = status as ProductStatus;
 
   const orderedDate = body.orderedDate ? new Date(body.orderedDate) : null;
   if (orderedDate && Number.isNaN(orderedDate.getTime())) {
@@ -117,38 +118,42 @@ export async function PATCH(
           specification: body.specification?.trim() || null,
           orderedDate,
           cost,
-          warranty: body.warranty ?? null,
+          warrantyPeriodId: body.warrantyPeriodId ?? null,
           warrantyExpire,
           categoryId: body.categoryId!,
           assetTypeId: body.assetTypeId!,
-          status,
+          status: statusValue,
           assignedTo:
-            status === "ACTIVE_USE"
+            statusValue === "ACTIVE_USE"
               ? assignedName
-              : statusNeedsUnassign(status)
+              : statusNeedsUnassign(statusValue)
                 ? null
                 : assignedName,
         },
       });
 
-      if (statusNeedsUnassign(status)) {
+      if (statusNeedsUnassign(statusValue)) {
         await tx.staffInventory.updateMany({
           where: { productId: id, returnDate: null },
           data: {
             returnDate: new Date(),
-            returnReason: statusReturnReason(status),
-            returnReasonNote: statusReturnReasonNote(status),
+            returnReason: statusReturnReason(statusValue),
+            returnReasonNote: statusReturnReasonNote(statusValue),
           },
         });
       }
 
-      if (status === "DAMAGED" || status === "SERVICEABLE" || status === "UNDER_SERVICE") {
+      if (
+        statusValue === "DAMAGED" ||
+        statusValue === "SERVICEABLE" ||
+        statusValue === "UNDER_SERVICE"
+      ) {
         await tx.productService.create({
           data: {
             productId: id,
-            repairable: status !== "DAMAGED",
-            notes: statusReturnReasonNote(status),
-            sentToService: status === "UNDER_SERVICE",
+            repairable: statusValue !== "DAMAGED",
+            notes: statusReturnReasonNote(statusValue),
+            sentToService: statusValue === "UNDER_SERVICE",
             vendorName: null,
             expectedReturnDate: null,
           },
@@ -173,6 +178,7 @@ export async function PATCH(
             errors: {
               categoryId: "Invalid category.",
               assetTypeId: "Invalid asset type.",
+              warrantyPeriodId: "Invalid warranty period.",
             },
           },
           { status: 400 },
