@@ -30,7 +30,11 @@ export default function LiveSearchInput({
   const changedByUser = useRef(false);
 
   useEffect(() => {
-    setValue(defaultValue);
+    changedByUser.current = false;
+    const frame = requestAnimationFrame(() => {
+      setValue(defaultValue);
+    });
+    return () => cancelAnimationFrame(frame);
   }, [defaultValue]);
 
   useEffect(() => {
@@ -57,8 +61,11 @@ export default function LiveSearchInput({
       const current = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
       const next = `${pathname}${params.toString() ? `?${params.toString()}` : ""}`;
       if (next !== current) {
+        changedByUser.current = false;
         router.replace(next, { scroll: false });
+        return;
       }
+      changedByUser.current = false;
     }, debounceMs);
 
     return () => clearTimeout(handle);
