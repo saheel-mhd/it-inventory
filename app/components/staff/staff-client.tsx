@@ -5,11 +5,13 @@ import { useRouter } from "next/navigation";
 import AddStaffModal from "~/app/components/staff/add-staff-modal";
 import AssignProductModal from "~/app/components/staff/assign-product-modal";
 import EditStaffModal from "~/app/components/staff/edit-staff-modal";
+import ResignStaffModal from "~/app/components/staff/resign-staff-modal";
+import ResignStaffPickerModal from "~/app/components/staff/resign-staff-picker-modal";
 import ReturnProductModal from "~/app/components/staff/return-product-modal";
 import Button from "~/app/components/ui/button";
 import DataPagination from "~/app/components/ui/data-pagination";
 import FilterPanel from "~/app/components/ui/filter-panel";
-import { IconReturn } from "~/app/components/ui/icons";
+import { IconEye, IconLogout, IconReturn } from "~/app/components/ui/icons";
 import LiveSearchInput from "~/app/components/ui/live-search-input";
 import RowsPerPageSelect from "~/app/components/ui/rows-per-page-select";
 import {
@@ -42,6 +44,7 @@ type StaffRow = {
   name: string;
   department: string;
   departmentId: string;
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
   inventoryUsingCount: number;
@@ -56,6 +59,7 @@ type StaffClientProps = {
   departmentId: string;
   sort: string;
   pageSize: number;
+  activeState: string;
   products: ProductOption[];
   departments: Array<{ id: string; name: string }>;
 };
@@ -77,6 +81,7 @@ export default function StaffClient({
   departmentId,
   sort,
   pageSize,
+  activeState,
   products,
   departments,
 }: StaffClientProps) {
@@ -84,29 +89,40 @@ export default function StaffClient({
   const [selectedStaff, setSelectedStaff] = useState<StaffRow | null>(null);
   const [editingStaff, setEditingStaff] = useState<StaffRow | null>(null);
 
+  const activeStaffOptions = staff
+    .filter((member) => member.isActive)
+    .map((member) => ({ id: member.id, name: member.name }));
+
   const pageHref = (nextPage: number) => {
     const params = new URLSearchParams();
     if (q.trim()) params.set("q", q.trim());
     if (departmentId) params.set("departmentId", departmentId);
     if (sort) params.set("sort", sort);
     if (pageSize) params.set("pageSize", String(pageSize));
+    if (activeState) params.set("activeState", activeState);
     params.set("page", String(nextPage));
     return `/dashboard/users?${params.toString()}`;
   };
 
-  const updateFilter = (next: { departmentId?: string; sort?: string }) => {
+  const updateFilter = (next: {
+    departmentId?: string;
+    sort?: string;
+    pageSize?: number;
+    activeState?: string;
+  }) => {
     const params = new URLSearchParams();
     if (q.trim()) params.set("q", q.trim());
-    if ((next.departmentId ?? departmentId).trim()) {
-      params.set("departmentId", (next.departmentId ?? departmentId).trim());
-    }
-    if (next.sort ?? sort) {
-      params.set("sort", next.sort ?? sort);
-    }
-    if (pageSize) {
-      params.set("pageSize", String(pageSize));
-    }
+    const nextDepartment = next.departmentId ?? departmentId;
+    const nextSort = next.sort ?? sort;
+    const nextPageSize = next.pageSize ?? pageSize;
+    const nextActiveState = next.activeState ?? activeState;
+
+    if (nextDepartment.trim()) params.set("departmentId", nextDepartment.trim());
+    if (nextSort) params.set("sort", nextSort);
+    if (nextPageSize) params.set("pageSize", String(nextPageSize));
+    if (nextActiveState) params.set("activeState", nextActiveState);
     params.delete("page");
+
     const query = params.toString();
     router.replace(query ? `/dashboard/users?${query}` : "/dashboard/users", { scroll: false });
   };
@@ -120,10 +136,11 @@ export default function StaffClient({
       <div className="flex items-center gap-3">
         <AddStaffModal products={products} departments={departments} />
         <LiveSearchInput defaultValue={q} placeholder="Search staff..." className="w-80" />
+        <ResignStaffPickerModal staff={staff} />
         <div className="ml-auto">
           <AssignProductModal
             products={products}
-            staffOptions={staff.map((member) => ({ id: member.id, name: member.name }))}
+            staffOptions={activeStaffOptions}
             triggerLabel="Assign"
             triggerIcon="+"
           />
@@ -146,6 +163,16 @@ export default function StaffClient({
         </select>
 
         <select
+          name="activeState"
+          value={activeState}
+          className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700"
+          onChange={(event) => updateFilter({ activeState: event.target.value })}
+        >
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+
+        <select
           name="sort"
           value={sort}
           className="h-9 rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700"
@@ -164,7 +191,7 @@ export default function StaffClient({
                 <TableHead>Name</TableHead>
                 <TableHead>Department</TableHead>
                 <TableHead>Inventory Using</TableHead>
-                <TableHead className="text-right">View</TableHead>
+                <TableHead className="text-right">Action</TableHead>
                 <TableHead className="text-right">Assign</TableHead>
               </TableRow>
             </TableHeader>
@@ -175,23 +202,36 @@ export default function StaffClient({
                   <TableCell>{toLabel(member.department)}</TableCell>
                   <TableCell>{member.inventoryUsingCount}</TableCell>
                   <TableCell className="text-right">
-                    <button
-                      type="button"
-                      className="inline-flex items-center justify-center rounded-md px-2 py-1 text-sm text-gray-600 hover:bg-gray-100"
-                      onClick={() => setSelectedStaff(member)}
-                      aria-label="View staff"
-                    >
-                      👁️
-                    </button>
+                    <div className="inline-flex items-center gap-1">
+                      <button
+                        type="button"
+                        className="inline-flex items-center justify-center rounded-md px-2 py-1 text-sm text-gray-600 hover:bg-gray-100"
+                        onClick={() => setSelectedStaff(member)}
+                        aria-label="View staff"
+                      >
+                        <IconEye className="h-4 w-4" />
+                      </button>
+                      {member.isActive && (
+                        <ResignStaffModal
+                          staff={member}
+                          triggerIcon={<IconLogout className="h-4 w-4" />}
+                          triggerClassName="inline-flex items-center justify-center rounded-md bg-transparent px-2 py-1 text-sm text-gray-500 shadow-none transition-colors duration-200 hover:bg-red-200 hover:text-red-800"
+                        />
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <AssignProductModal
-                      products={products}
-                      staffOptions={staff.map((item) => ({ id: item.id, name: item.name }))}
-                      presetStaffId={member.id}
-                      triggerLabel=""
-                      triggerIcon="+"
-                    />
+                    {member.isActive ? (
+                      <AssignProductModal
+                        products={products}
+                        staffOptions={activeStaffOptions}
+                        presetStaffId={member.id}
+                        triggerLabel=""
+                        triggerIcon="+"
+                      />
+                    ) : (
+                      <span className="text-xs text-gray-400">Inactive</span>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -208,14 +248,7 @@ export default function StaffClient({
         <div className="flex items-center justify-between border-t px-3 py-2">
           <RowsPerPageSelect
             value={pageSize}
-            onChange={(nextSize) => {
-              const params = new URLSearchParams();
-              if (q.trim()) params.set("q", q.trim());
-              if (departmentId) params.set("departmentId", departmentId);
-              if (sort) params.set("sort", sort);
-              params.set("pageSize", String(nextSize));
-              router.replace(`/dashboard/users?${params.toString()}`, { scroll: false });
-            }}
+            onChange={(nextSize) => updateFilter({ pageSize: nextSize })}
           />
           <DataPagination currentPage={currentPage} totalPages={totalPages} getHref={pageHref} />
         </div>

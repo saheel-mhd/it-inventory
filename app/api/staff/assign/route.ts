@@ -20,11 +20,14 @@ export async function POST(request: Request) {
 
   const staff = await prisma.staff.findUnique({
     where: { id: body.staffId },
-    select: { id: true, name: true },
+    select: { id: true, name: true, isActive: true },
   });
 
   if (!staff) {
     return NextResponse.json({ error: "Staff not found." }, { status: 404 });
+  }
+  if (!staff.isActive) {
+    return NextResponse.json({ error: "Cannot assign product to inactive staff." }, { status: 400 });
   }
 
   const assignment = await prisma.$transaction(async (tx) => {

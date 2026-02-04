@@ -6,6 +6,7 @@ type Payload = {
   assignmentId?: string;
   reason?: ReturnReason | string;
   otherReason?: string | null;
+  notes?: string | null;
   repairable?: boolean | null;
   sentToService?: boolean | null;
   serviceVendor?: string | null;
@@ -85,6 +86,8 @@ export async function POST(request: Request) {
   const returnReasonNote =
     reason === "OTHER"
       ? body.otherReason!.trim()
+      : reason === "RESIGNED"
+        ? body.notes?.trim() || null
       : reason === "DAMAGED" && body.repairable === false
         ? body.damageReason!.trim()
         : null;

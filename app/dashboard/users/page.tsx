@@ -9,6 +9,7 @@ type UsersSearchParams = {
   departmentId?: string | string[];
   sort?: string | string[];
   pageSize?: string | string[];
+  activeState?: string | string[];
 };
 
 const getParam = (value: string | string[] | undefined) =>
@@ -39,6 +40,7 @@ export default async function UsersPage({
   const pageSize = getPageSize(resolvedSearchParams?.pageSize);
   const departmentId = getParam(resolvedSearchParams?.departmentId);
   const sort = getParam(resolvedSearchParams?.sort) || "updated_desc";
+  const activeState = getParam(resolvedSearchParams?.activeState) || "active";
 
   const departmentMatch = q.trim();
 
@@ -63,6 +65,7 @@ export default async function UsersPage({
         }
       : {}),
     ...(departmentId ? { departmentId } : {}),
+    ...(activeState === "inactive" ? { isActive: false } : { isActive: true }),
   };
 
   const orderBy =
@@ -105,6 +108,7 @@ export default async function UsersPage({
   const serializedStaff = staff.map((member) => ({
     id: member.id,
     name: member.name,
+    isActive: member.isActive,
     department: member.department.name,
     departmentId: member.department.id,
     createdAt: member.createdAt.toISOString(),
@@ -130,6 +134,7 @@ export default async function UsersPage({
       departmentId={departmentId}
       sort={sort}
       pageSize={pageSize}
+      activeState={activeState}
       products={products}
       departments={departments}
     />

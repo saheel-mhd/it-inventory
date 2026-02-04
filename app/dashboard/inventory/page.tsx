@@ -38,6 +38,7 @@ export default async function InventoryPage() {
       select: { id: true, name: true, months: true },
     }),
     prisma.staff.findMany({
+      where: { isActive: true },
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),
