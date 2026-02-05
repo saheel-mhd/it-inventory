@@ -45,7 +45,7 @@ export default function DataPagination({
               type="button"
               onClick={() => onPageChange?.(prevPage)}
               disabled={!canPrev}
-              className="inline-flex h-9 w-auto items-center justify-center rounded-md border border-gray-200 px-3 text-sm text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-9 w-auto items-center justify-center rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 shadow-sm transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Prev
             </button>
@@ -67,10 +67,10 @@ export default function DataPagination({
                 <button
                   type="button"
                   onClick={() => onPageChange?.(pageNumber)}
-                  className={`inline-flex h-9 w-9 items-center justify-center rounded-md border text-sm transition ${
+                  className={`inline-flex h-9 w-9 items-center justify-center rounded-md border bg-white text-sm shadow-sm transition ${
                     pageNumber === safeCurrentPage
                       ? "border-gray-900 bg-gray-900 text-white"
-                      : "border-gray-200 text-gray-700 hover:bg-gray-100"
+                      : "border-gray-300 text-gray-700 hover:bg-gray-100"
                   }`}
                 >
                   {pageNumber}
@@ -94,7 +94,7 @@ export default function DataPagination({
               type="button"
               onClick={() => onPageChange?.(nextPage)}
               disabled={!canNext}
-              className="inline-flex h-9 w-auto items-center justify-center rounded-md border border-gray-200 px-3 text-sm text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-9 w-auto items-center justify-center rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-700 shadow-sm transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Next
             </button>

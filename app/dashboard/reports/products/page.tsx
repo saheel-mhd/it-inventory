@@ -27,7 +27,7 @@ const STATUS_COLORS: Record<string, string> = {
   DAMAGED: "bg-red-500",
   ACTIVE_USE: "bg-blue-500",
   UNDER_SERVICE: "bg-orange-500",
-  SERVICEABLE: "bg-yellow-500",
+  SERVICEABLE: "bg-sky-500",
 };
 
 const toLabel = (value: string) =>

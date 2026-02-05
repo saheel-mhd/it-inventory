@@ -1,15 +1,18 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f8f4;
-  --foreground: #1a2517;
+  --background: #ffffff;
+  --foreground: #111111;
   --surface: #ffffff;
-  --surface-alt: #eceee6;
-  --border: #c0c2b9;
-  --accent: #acc8a2;
-  --accent-ink: #1a2517;
-  --muted: #515a4e;
-  --muted-light: #7a7f76;
+  --surface-alt: #f3f4f6;
+  --surface-elevated: #ffffff;
+  --border: #6b7280;
+  --border-strong: #8b5e3c;
+  --accent: #c9a227;
+  --accent-strong: #4f46e5;
+  --accent-ink: #111111;
+  --muted: #374151;
+  --muted-light: #6b7280;
 }
 
 @theme inline {
@@ -17,34 +20,40 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-body);
   --font-mono: var(--font-body);
-  --color-gray-50: #f7f8f4;
-  --color-gray-100: #eceee6;
-  --color-gray-200: #d7d9d0;
-  --color-gray-300: #c0c2b9;
-  --color-gray-400: #9fa39b;
-  --color-gray-500: #7a7f76;
-  --color-gray-600: #515a4e;
-  --color-gray-700: #3a4136;
-  --color-gray-800: #2a3326;
-  --color-gray-900: #1a2517;
-  --color-gray-950: #0e130c;
-  --color-blue-50: #f1f6ee;
-  --color-blue-100: #e3ecdd;
-  --color-blue-200: #cfdec9;
-  --color-blue-300: #bad0b4;
-  --color-blue-400: #acc8a2;
-  --color-blue-500: #96b08c;
-  --color-blue-600: #7b9674;
-  --color-blue-700: #5f7458;
-  --color-blue-800: #45533f;
-  --color-blue-900: #2c382a;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111111;
+  --color-gray-950: #000000;
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #bfdbfe;
+  --color-blue-300: #93c5fd;
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8;
+  --color-blue-800: #1e40af;
+  --color-blue-900: #1e3a8a;
 }
 
 body {
-  background: var(--background);
+  background: #ffffff;
   color: var(--foreground);
   font-family: var(--font-body);
   letter-spacing: 0.01em;
+  min-height: 100vh;
+}
+
+::selection {
+  background: #dbeafe;
+  color: #111111;
 }
 
 h1,
@@ -54,7 +63,7 @@ h4,
 h5,
 h6 {
   font-family: var(--font-heading);
-  color: #0e130c;
+  color: #111111;
   letter-spacing: 0.02em;
 }
 
@@ -65,7 +74,7 @@ h6 {
 .text-lg.font-semibold,
 .text-base.font-semibold {
   font-family: var(--font-heading);
-  color: #0e130c;
+  color: #111111;
 }
 
 .font-nav {
@@ -75,6 +84,9 @@ h6 {
 .surface-card {
   background: var(--surface);
   border-color: var(--border);
+  box-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.08),
+    0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
 .surface-muted {
@@ -92,6 +104,8 @@ h6 {
 .bg-white {
   background-color: var(--surface) !important;
 }
+.bg-black\/40 { background-color: rgba(0, 0, 0, 0.4) !important; }
+.bg-black\/50 { background-color: rgba(0, 0, 0, 0.5) !important; }
 .border-gray-200,
 .border-gray-300 {
   border-color: var(--border) !important;
@@ -105,4 +119,59 @@ h6 {
 .text-gray-600,
 .text-gray-500 {
   color: var(--muted-light) !important;
+}
+/* Semantic colors */
+.text-red-600,
+.text-red-700,
+.text-red-800 { color: #dc2626 !important; }
+.text-green-600,
+.text-green-700 { color: #16a34a !important; }
+.text-yellow-600 { color: #c9a227 !important; }
+.text-blue-600,
+.text-blue-700 { color: #2563eb !important; }
+.text-indigo-600,
+.text-indigo-700 { color: #4f46e5 !important; }
+
+.bg-red-50,
+.bg-red-100 { background-color: #fee2e2 !important; }
+.bg-green-50,
+.bg-green-100 { background-color: #dcfce7 !important; }
+.bg-blue-50,
+.bg-blue-100 { background-color: #e0f2fe !important; }
+
+.border-red-200,
+.border-red-300 { border-color: #fca5a5 !important; }
+.border-green-200,
+.border-green-300 { border-color: #86efac !important; }
+.border-blue-200,
+.border-blue-300 { border-color: #7dd3fc !important; }
+
+input:not([type="checkbox"]),
+select,
+textarea {
+  border-color: var(--border) !important;
+  background: var(--surface) !important;
+  color: var(--foreground) !important;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background-color 150ms ease;
+}
+
+input:not([type="checkbox"]):focus,
+select:focus,
+textarea:focus {
+  border-color: var(--accent-strong) !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+  outline: none;
+}
+
+button,
+a {
+  transition:
+    color 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
 }

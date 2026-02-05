@@ -23,9 +23,9 @@ const secondaryItems = [
 
 export default function Sidebar() {
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-60 border-r border-gray-200 bg-gray-50 p-4">
+    <aside className="fixed left-0 top-0 z-40 h-screen w-60 border-r border-gray-300 bg-gray-50 p-4 shadow-sm">
       <div className="flex h-full flex-col">
-        <div className="mb-6 text-lg font-extrabold text-gray-900 font-nav tracking-wide">
+        <div className="mb-6 rounded-lg border border-gray-300 bg-gray-200 px-3 py-2 text-lg font-extrabold text-gray-800 font-nav tracking-wide shadow-sm">
           Inventory System
         </div>
 
@@ -36,7 +36,7 @@ export default function Sidebar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="font-nav flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-200 hover:text-gray-900"
+                className="font-nav flex items-center gap-3 rounded-md border border-transparent px-3 py-2 text-sm font-medium text-gray-800 transition hover:border-gray-300 hover:bg-gray-200 hover:text-gray-900"
               >
                 <Icon className="h-4 w-4 text-gray-600" />
                 {item.label}
@@ -54,9 +54,9 @@ export default function Sidebar() {
               const Icon = item.icon;
               return (
                 <Link
-                  key={item.href}
-                  href={item.href}
-                  className="font-nav flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-200 hover:text-gray-900"
+                key={item.href}
+                href={item.href}
+                  className="font-nav flex items-center gap-3 rounded-md border border-transparent px-3 py-2 text-sm font-medium text-gray-800 transition hover:border-gray-300 hover:bg-gray-200 hover:text-gray-900"
                 >
                   <Icon className="h-4 w-4 text-gray-600" />
                   {item.label}
