@@ -13,7 +13,7 @@ export default function ReportsPage() {
 
       <div className="grid gap-4 md:grid-cols-2">
         <Link
-          href="/dashboard/reports/products"
+          href="/reports/products"
           className="group rounded-2xl border bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
         >
           <div className="flex items-start gap-4">
@@ -35,7 +35,7 @@ export default function ReportsPage() {
         </Link>
 
         <Link
-          href="/dashboard/reports/staff"
+          href="/reports/staff"
           className="group rounded-2xl border bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
         >
           <div className="flex items-start gap-4">

@@ -56,7 +56,7 @@ export default function UsersSettingsClient({
     const params = new URLSearchParams();
     if (q.trim()) params.set("q", q.trim());
     params.set("page", String(nextPage));
-    return `/dashboard/settings/users?${params.toString()}`;
+    return `/settings/users?${params.toString()}`;
   };
 
   return (

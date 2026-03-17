@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import DamageModalSections from "~/app/components/products/damage-modal-sections";
 import Button from "~/app/components/ui/button";
 
 type DamageModalProps = {
@@ -17,6 +18,20 @@ type DamageModalProps = {
   onSaved: () => void;
 };
 
+const emptyState = {
+  repairable: "",
+  sentToService: "",
+  serviceVendor: "",
+  serviceReturnDate: "",
+  notes: "",
+  serviced: "",
+  serviceDate: "",
+  serviceCost: "",
+  serviceMessage: "",
+  serviceFailureReason: "",
+  error: "",
+};
+
 export default function DamageModal({
   open,
   product,
@@ -24,139 +39,79 @@ export default function DamageModal({
   onSaved,
 }: DamageModalProps) {
   const isUnderService = Boolean(product && product.status === "UNDER_SERVICE");
-  const [repairable, setRepairable] = useState("");
-  const [sentToService, setSentToService] = useState("");
-  const [serviceVendor, setServiceVendor] = useState("");
-  const [serviceReturnDate, setServiceReturnDate] = useState("");
-  const [notes, setNotes] = useState("");
-  const [serviced, setServiced] = useState("");
-  const [serviceDate, setServiceDate] = useState("");
-  const [serviceCost, setServiceCost] = useState("");
-  const [serviceMessage, setServiceMessage] = useState("");
-  const [serviceFailureReason, setServiceFailureReason] = useState("");
-  const [error, setError] = useState("");
+  const [state, setState] = useState(emptyState);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!open) {
-      setRepairable("");
-      setSentToService("");
-      setServiceVendor("");
-      setServiceReturnDate("");
-      setNotes("");
-      setServiced("");
-      setServiceDate("");
-      setServiceCost("");
-      setServiceMessage("");
-      setServiceFailureReason("");
-      setError("");
+      setState(emptyState);
       setIsSubmitting(false);
     }
   }, [open]);
 
   if (!open || !product) return null;
 
+  const setField = (field: keyof typeof emptyState) => (value: string) => {
+    setState((prev) => ({ ...prev, [field]: value }));
+  };
+
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setError("");
+    setState((prev) => ({ ...prev, error: "" }));
 
-    if (isUnderService) {
-      if (!serviced) {
-        setError("Please select whether the product is serviced.");
-        return;
-      }
-      if (serviced === "yes" && !serviceDate) {
-        setError("Please select the service date.");
-        return;
-      }
-      if (serviced === "no" && !serviceFailureReason.trim()) {
-        setError("Please provide a reason.");
-        return;
-      }
-
-      setIsSubmitting(true);
-      try {
-        const response = await fetch("/api/products/service", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            productId: product.id,
-            serviced: serviced === "yes",
-            serviceDate: serviceDate || new Date().toISOString().slice(0, 10),
-            serviceCost: serviceCost.trim() || null,
-            serviceMessage: serviceMessage.trim() || null,
-            serviceFailureReason:
-              serviced === "no" ? serviceFailureReason.trim() : null,
-          }),
-        });
-
-        if (!response.ok) {
-          const payload = await response.json().catch(() => ({}));
-          setError(payload?.error ?? "Failed to update product.");
-          return;
-        }
-
-        onSaved();
-        onClose();
-      } catch (err) {
-        console.error(err);
-        setError("Something went wrong. Please try again.");
-      } finally {
-        setIsSubmitting(false);
-      }
-
+    const validationError = getValidationError(isUnderService, state);
+    if (validationError) {
+      setState((prev) => ({ ...prev, error: validationError }));
       return;
-    }
-
-    if (!repairable) {
-      setError("Please select whether the item is repairable.");
-      return;
-    }
-    if (repairable === "no" && !notes.trim()) {
-      setError("Please provide a reason.");
-      return;
-    }
-    if (repairable === "yes" && !sentToService) {
-      setError("Please select whether it is sent to service.");
-      return;
-    }
-    if (repairable === "yes" && sentToService === "yes") {
-      if (!serviceVendor.trim()) {
-        setError("Please enter the service vendor name.");
-        return;
-      }
-      if (!serviceReturnDate) {
-        setError("Please select the return date.");
-        return;
-      }
     }
 
     setIsSubmitting(true);
     try {
-      const response = await fetch("/api/products/damage", {
+      const response = await fetch(isUnderService ? "/api/products/service" : "/api/products/damage", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          productId: product.id,
-          repairable: repairable === "yes",
-          sentToService: sentToService === "yes",
-          serviceVendor: sentToService === "yes" ? serviceVendor.trim() : null,
-          serviceReturnDate: sentToService === "yes" ? serviceReturnDate : null,
-          notes: repairable === "no" ? notes.trim() : null,
-        }),
+        body: JSON.stringify(
+          isUnderService
+            ? {
+                productId: product.id,
+                serviced: state.serviced === "yes",
+                serviceDate:
+                  state.serviceDate || new Date().toISOString().slice(0, 10),
+                serviceCost: state.serviceCost.trim() || null,
+                serviceMessage: state.serviceMessage.trim() || null,
+                serviceFailureReason:
+                  state.serviced === "no" ? state.serviceFailureReason.trim() : null,
+              }
+            : {
+                productId: product.id,
+                repairable: state.repairable === "yes",
+                sentToService: state.sentToService === "yes",
+                serviceVendor:
+                  state.sentToService === "yes" ? state.serviceVendor.trim() : null,
+                serviceReturnDate:
+                  state.sentToService === "yes" ? state.serviceReturnDate : null,
+                notes: state.repairable === "no" ? state.notes.trim() : null,
+              },
+        ),
       });
 
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
-        setError(payload?.error ?? "Failed to update product.");
+        setState((prev) => ({
+          ...prev,
+          error: payload?.error ?? "Failed to update product.",
+        }));
         return;
       }
 
       onSaved();
       onClose();
-    } catch (err) {
-      console.error(err);
-      setError("Something went wrong. Please try again.");
+    } catch (error) {
+      console.error(error);
+      setState((prev) => ({
+        ...prev,
+        error: "Something went wrong. Please try again.",
+      }));
     } finally {
       setIsSubmitting(false);
     }
@@ -173,9 +128,7 @@ export default function DamageModal({
       <div className="relative w-full max-w-2xl px-4" role="dialog" aria-modal="true">
         <div className="rounded-2xl bg-white shadow-xl">
           <div className="flex items-center justify-between border-b px-5 py-4">
-            <div className="text-base font-semibold text-gray-900">
-              Mark as Damaged
-            </div>
+            <div className="text-base font-semibold text-gray-900">Mark as Damaged</div>
             <button
               type="button"
               className="rounded-md px-2 py-1 text-sm text-gray-500 hover:bg-gray-100"
@@ -186,177 +139,32 @@ export default function DamageModal({
           </div>
 
           <form className="space-y-4 px-5 py-4" onSubmit={onSubmit}>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-1">
-                <div className="text-xs font-semibold uppercase text-gray-400">
-                  Product
-                </div>
-                <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
-                  {product.product}
-                </div>
-              </div>
-              <div className="space-y-1">
-                <div className="text-xs font-semibold uppercase text-gray-400">
-                  SKU
-                </div>
-                <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
-                  {product.sku}
-                </div>
-              </div>
-              <div className="space-y-1">
-                <div className="text-xs font-semibold uppercase text-gray-400">
-                  Warranty Expire
-                </div>
-                <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
-                  {product.warrantyExpire
-                    ? new Date(product.warrantyExpire).toLocaleDateString()
-                    : "-"}
-                </div>
-              </div>
-              <div className="space-y-1">
-                <div className="text-xs font-semibold uppercase text-gray-400">
-                  Cost
-                </div>
-                <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
-                  {product.cost ?? "-"}
-                </div>
-              </div>
-            </div>
+            <DamageModalSections
+              product={product}
+              isUnderService={isUnderService}
+              repairable={state.repairable}
+              sentToService={state.sentToService}
+              serviceVendor={state.serviceVendor}
+              serviceReturnDate={state.serviceReturnDate}
+              notes={state.notes}
+              serviced={state.serviced}
+              serviceDate={state.serviceDate}
+              serviceCost={state.serviceCost}
+              serviceMessage={state.serviceMessage}
+              serviceFailureReason={state.serviceFailureReason}
+              setRepairable={setField("repairable")}
+              setSentToService={setField("sentToService")}
+              setServiceVendor={setField("serviceVendor")}
+              setServiceReturnDate={setField("serviceReturnDate")}
+              setNotes={setField("notes")}
+              setServiced={setField("serviced")}
+              setServiceDate={setField("serviceDate")}
+              setServiceCost={setField("serviceCost")}
+              setServiceMessage={setField("serviceMessage")}
+              setServiceFailureReason={setField("serviceFailureReason")}
+            />
 
-            {isUnderService ? (
-              <>
-                <label className="text-sm font-medium text-gray-700">
-                  Product serviced
-                  <select
-                    className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"
-                    value={serviced}
-                    onChange={(event) => {
-                      const next = event.target.value;
-                      setServiced(next);
-                      if (next === "yes") {
-                        setServiceDate(new Date().toISOString().slice(0, 10));
-                      }
-                    }}
-                  >
-                    <option value="">Select</option>
-                    <option value="yes">Yes</option>
-                    <option value="no">No</option>
-                  </select>
-                </label>
-
-                {serviced === "yes" && (
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <label className="text-sm font-medium text-gray-700">
-                      Service date
-                      <input
-                        className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"
-                        type="date"
-                        value={serviceDate || new Date().toISOString().slice(0, 10)}
-                        onChange={(event) => setServiceDate(event.target.value)}
-                      />
-                    </label>
-                    <label className="text-sm font-medium text-gray-700">
-                      Repair cost
-                      <input
-                        className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={serviceCost}
-                        onChange={(event) => setServiceCost(event.target.value)}
-                        placeholder="0.00"
-                      />
-                    </label>
-                    <label className="text-sm font-medium text-gray-700 md:col-span-2">
-                      Message
-                      <textarea
-                        className="mt-2 min-h-[90px] w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                        value={serviceMessage}
-                        onChange={(event) => setServiceMessage(event.target.value)}
-                        placeholder="Add message"
-                      />
-                    </label>
-                  </div>
-                )}
-
-                {serviced === "no" && (
-                  <label className="text-sm font-medium text-gray-700">
-                    Reason
-                    <textarea
-                      className="mt-2 min-h-[90px] w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                      value={serviceFailureReason}
-                      onChange={(event) => setServiceFailureReason(event.target.value)}
-                      placeholder="Add reason"
-                    />
-                  </label>
-                )}
-              </>
-            ) : (
-              <label className="text-sm font-medium text-gray-700">
-                Is it repairable?
-                <select
-                  className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"
-                  value={repairable}
-                  onChange={(event) => setRepairable(event.target.value)}
-                >
-                  <option value="">Select</option>
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
-                </select>
-              </label>
-            )}
-
-            {!isUnderService && repairable === "yes" && (
-              <label className="text-sm font-medium text-gray-700">
-                Sent to service
-                <select
-                  className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"
-                  value={sentToService}
-                  onChange={(event) => setSentToService(event.target.value)}
-                >
-                  <option value="">Select</option>
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
-                </select>
-              </label>
-            )}
-
-            {!isUnderService && repairable === "yes" && sentToService === "yes" && (
-              <div className="grid gap-4 md:grid-cols-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Service vendor
-                  <input
-                    className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"
-                    value={serviceVendor}
-                    onChange={(event) => setServiceVendor(event.target.value)}
-                    placeholder="Vendor name"
-                  />
-                </label>
-                <label className="text-sm font-medium text-gray-700">
-                  Return date
-                  <input
-                    className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"
-                    type="date"
-                    value={serviceReturnDate}
-                    onChange={(event) => setServiceReturnDate(event.target.value)}
-                  />
-                </label>
-              </div>
-            )}
-
-            {!isUnderService && repairable === "no" && (
-              <label className="text-sm font-medium text-gray-700">
-                Reason
-                <textarea
-                  className="mt-2 min-h-[90px] w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                  value={notes}
-                  onChange={(event) => setNotes(event.target.value)}
-                  placeholder="Add reason"
-                />
-              </label>
-            )}
-
-            {error && <div className="text-sm text-red-600">{error}</div>}
+            {state.error && <div className="text-sm text-red-600">{state.error}</div>}
 
             <div className="flex justify-end">
               <Button type="submit" disabled={isSubmitting}>
@@ -368,4 +176,31 @@ export default function DamageModal({
       </div>
     </div>
   );
+}
+
+function getValidationError(
+  isUnderService: boolean,
+  state: typeof emptyState,
+) {
+  if (isUnderService) {
+    if (!state.serviced) return "Please select whether the product is serviced.";
+    if (state.serviced === "yes" && !state.serviceDate) {
+      return "Please select the service date.";
+    }
+    if (state.serviced === "no" && !state.serviceFailureReason.trim()) {
+      return "Please provide a reason.";
+    }
+    return "";
+  }
+
+  if (!state.repairable) return "Please select whether the item is repairable.";
+  if (state.repairable === "no" && !state.notes.trim()) return "Please provide a reason.";
+  if (state.repairable === "yes" && !state.sentToService) {
+    return "Please select whether it is sent to service.";
+  }
+  if (state.repairable === "yes" && state.sentToService === "yes") {
+    if (!state.serviceVendor.trim()) return "Please enter the service vendor name.";
+    if (!state.serviceReturnDate) return "Please select the return date.";
+  }
+  return "";
 }

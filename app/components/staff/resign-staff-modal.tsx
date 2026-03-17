@@ -108,6 +108,17 @@ export default function ResignStaffModal({
                   <div><span className="font-medium">Inventory Using:</span> {staff.inventoryUsingCount}</div>
                   <div><span className="font-medium">Updated:</span> {new Date(staff.updatedAt).toLocaleDateString()}</div>
                 </div>
+                {activeAssignments.length > 0 && (
+                  <div className="mt-3">
+                    <a
+                      href={`/handovers/resign/${staff.id}`}
+                      target="_blank"
+                      className="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-100"
+                    >
+                      Print Handover Form
+                    </a>
+                  </div>
+                )}
               </div>
 
               <form className="space-y-4 px-5 py-4" onSubmit={onSubmit}>

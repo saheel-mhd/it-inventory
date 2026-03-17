@@ -1,19 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import ProductFormFields from "~/app/components/products/product-form-fields";
+import {
+  CategoryOption,
+  emptyProductForm,
+  Option,
+  ProductFormErrors,
+  ProductFormState,
+} from "~/app/components/products/product-form-types";
 import Button from "~/app/components/ui/button";
-
-type Option = {
-  id: string;
-  name: string;
-  isActive?: boolean;
-};
-
-type CategoryOption = Option & {
-  assetTypeId?: string | null;
-  prefix?: string | null;
-  isActive?: boolean;
-};
 
 type AddItemFormProps = {
   categories: CategoryOption[];
@@ -22,50 +18,22 @@ type AddItemFormProps = {
   onCreated?: () => void;
 };
 
-type FormState = {
-  product: string;
-  brand: string;
-  snNumber: string;
-  sku: string;
-  specification: string;
-  orderedDate: string;
-  cost: string;
-  warrantyPeriodId: string;
-  warrantyExpire: string;
-  categoryId: string;
-  assetTypeId: string;
-};
-
-type FormErrors = Partial<Record<keyof FormState | "general", string>>;
-
-const emptyForm: FormState = {
-  product: "",
-  brand: "",
-  snNumber: "",
-  sku: "",
-  specification: "",
-  orderedDate: "",
-  cost: "",
-  warrantyPeriodId: "",
-  warrantyExpire: "",
-  categoryId: "",
-  assetTypeId: "",
-};
-
 export default function AddItemForm({
   categories,
   assetTypes,
   warrantyPeriods,
   onCreated,
 }: AddItemFormProps) {
-  const [form, setForm] = useState<FormState>(emptyForm);
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [form, setForm] = useState<ProductFormState>(emptyProductForm);
+  const [errors, setErrors] = useState<ProductFormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSkuLoading, setIsSkuLoading] = useState(false);
 
-  const setField = (field: keyof FormState) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setForm((prev) => ({ ...prev, [field]: event.target.value }));
-  };
+  const setField =
+    (field: keyof ProductFormState) =>
+    (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      setForm((prev) => ({ ...prev, [field]: event.target.value }));
+    };
 
   useEffect(() => {
     if (!form.warrantyPeriodId) {
@@ -76,16 +44,15 @@ export default function AddItemForm({
     const period = warrantyPeriods.find((item) => item.id === form.warrantyPeriodId);
     const months = period?.months ?? 0;
     if (months === 0) return;
-    const baseDate = form.orderedDate
-      ? new Date(form.orderedDate)
-      : new Date();
+
+    const baseDate = form.orderedDate ? new Date(form.orderedDate) : new Date();
     const nextDate = new Date(baseDate);
     nextDate.setMonth(nextDate.getMonth() + months);
     setForm((prev) => ({
       ...prev,
       warrantyExpire: nextDate.toISOString().slice(0, 10),
     }));
-  }, [form.warrantyPeriodId, form.orderedDate, warrantyPeriods]);
+  }, [form.orderedDate, form.warrantyPeriodId, warrantyPeriods]);
 
   useEffect(() => {
     if (!form.assetTypeId) {
@@ -97,7 +64,7 @@ export default function AddItemForm({
     if (!selectedCategory || selectedCategory.assetTypeId !== form.assetTypeId) {
       setForm((prev) => ({ ...prev, categoryId: "", sku: "" }));
     }
-  }, [form.assetTypeId, form.categoryId, categories]);
+  }, [categories, form.assetTypeId, form.categoryId]);
 
   useEffect(() => {
     if (!form.categoryId) {
@@ -116,10 +83,14 @@ export default function AddItemForm({
         );
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) {
-          setErrors((prev) => ({ ...prev, sku: payload?.error ?? "Failed to generate SKU." }));
+          setErrors((prev) => ({
+            ...prev,
+            sku: payload?.error ?? "Failed to generate SKU.",
+          }));
           setForm((prev) => ({ ...prev, sku: "" }));
           return;
         }
+
         setErrors((prev) => ({ ...prev, sku: undefined }));
         setForm((prev) => ({ ...prev, sku: payload?.sku ?? "" }));
       } catch (error) {
@@ -135,14 +106,8 @@ export default function AddItemForm({
     return () => controller.abort();
   }, [form.categoryId]);
 
-  const filteredCategories = categories.filter(
-    (category) =>
-      category.assetTypeId === form.assetTypeId &&
-      (category.isActive === undefined || category.isActive),
-  );
-
   const validate = () => {
-    const nextErrors: FormErrors = {};
+    const nextErrors: ProductFormErrors = {};
     if (!form.product.trim()) nextErrors.product = "Product name is required.";
     if (!form.sku.trim()) nextErrors.sku = "SKU is required.";
     if (!form.categoryId) nextErrors.categoryId = "Category is required.";
@@ -162,26 +127,22 @@ export default function AddItemForm({
     setIsSubmitting(true);
 
     try {
-      const orderedDateValue = form.orderedDate || new Date().toISOString().slice(0, 10);
-      const body = {
-        ...form,
-        orderedDate: orderedDateValue,
-      };
       const response = await fetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({
+          ...form,
+          orderedDate: form.orderedDate || new Date().toISOString().slice(0, 10),
+        }),
       });
 
       if (!response.ok) {
         const payload = await response.json().catch(() => ({}));
-        setErrors(
-          payload?.errors ?? { general: payload?.error ?? "Failed to save item." },
-        );
+        setErrors(payload?.errors ?? { general: payload?.error ?? "Failed to save item." });
         return;
       }
 
-      setForm(emptyForm);
+      setForm(emptyProductForm);
       setErrors({});
       onCreated?.();
     } catch (error) {
@@ -193,188 +154,18 @@ export default function AddItemForm({
   };
 
   return (
-    <form
-      className="space-y-4"
-      onSubmit={onSubmit}
-    >
-      <div className="grid gap-4 md:grid-cols-2">
-        <label className="text-sm font-medium text-gray-700">
-          Asset type
-          <select
-            className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"
-            name="assetTypeId"
-            value={form.assetTypeId}
-            onChange={setField("assetTypeId")}
-          >
-            <option value="">Select asset type</option>
-            {assetTypes
-              .filter((assetType) => assetType.isActive ?? true)
-              .map((assetType) => (
-              <option key={assetType.id} value={assetType.id}>
-                {assetType.name}
-              </option>
-            ))}
-          </select>
-          {errors.assetTypeId && (
-            <div className="mt-1 text-xs text-red-600">{errors.assetTypeId}</div>
-          )}
-        </label>
+    <form className="space-y-4" onSubmit={onSubmit}>
+      <ProductFormFields
+        form={form}
+        errors={errors}
+        categories={categories}
+        assetTypes={assetTypes}
+        warrantyPeriods={warrantyPeriods}
+        onFieldChange={setField}
+        skuHint={isSkuLoading ? "Generating SKU..." : undefined}
+      />
 
-        <label className="text-sm font-medium text-gray-700">
-          Category
-          <select
-            className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"
-            name="categoryId"
-            value={form.categoryId}
-            onChange={setField("categoryId")}
-            disabled={!form.assetTypeId}
-          >
-            <option value="">
-              {form.assetTypeId ? "Select category" : "Select asset type first"}
-            </option>
-            {filteredCategories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-          {errors.categoryId && (
-            <div className="mt-1 text-xs text-red-600">{errors.categoryId}</div>
-          )}
-        </label>
-
-        <label className="text-sm font-medium text-gray-700">
-          Product name
-          <input
-            className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            name="product"
-            placeholder="MacBook Pro 14"
-            type="text"
-            value={form.product}
-            onChange={setField("product")}
-          />
-          {errors.product && (
-            <div className="mt-1 text-xs text-red-600">{errors.product}</div>
-          )}
-        </label>
-
-        <label className="text-sm font-medium text-gray-700">
-          Brand
-          <input
-            className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            name="brand"
-            placeholder="Apple"
-            type="text"
-            value={form.brand}
-            onChange={setField("brand")}
-          />
-          {errors.brand && (
-            <div className="mt-1 text-xs text-red-600">{errors.brand}</div>
-          )}
-        </label>
-
-        <label className="text-sm font-medium text-gray-700">
-          SN Number
-          <input
-            className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            name="snNumber"
-            placeholder="SN-123456"
-            type="text"
-            value={form.snNumber}
-            onChange={setField("snNumber")}
-          />
-          {errors.snNumber && (
-            <div className="mt-1 text-xs text-red-600">{errors.snNumber}</div>
-          )}
-        </label>
-
-        <label className="text-sm font-medium text-gray-700">
-          SKU
-          <input
-            className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            name="sku"
-            placeholder={form.categoryId ? "Auto-generated SKU" : "Select category first"}
-            type="text"
-            value={form.sku}
-            readOnly
-          />
-          {errors.sku && (
-            <div className="mt-1 text-xs text-red-600">{errors.sku}</div>
-          )}
-          {isSkuLoading && (
-            <div className="mt-1 text-xs text-gray-500">Generating SKU...</div>
-          )}
-        </label>
-
-        <label className="text-sm font-medium text-gray-700">
-          Specification
-          <input
-            className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            name="specification"
-            placeholder="M3 Pro, 18GB, 1TB"
-            type="text"
-            value={form.specification}
-            onChange={setField("specification")}
-          />
-        </label>
-
-        <label className="text-sm font-medium text-gray-700">
-          Cost
-          <input
-            className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            name="cost"
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="0.00"
-            value={form.cost}
-            onChange={setField("cost")}
-          />
-        </label>
-
-        <label className="text-sm font-medium text-gray-700">
-          Ordered date
-          <input
-            className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            name="orderedDate"
-            type="date"
-            value={form.orderedDate}
-            onChange={setField("orderedDate")}
-          />
-        </label>
-
-        <label className="text-sm font-medium text-gray-700">
-          Warranty
-          <select
-            className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"
-            name="warrantyPeriodId"
-            value={form.warrantyPeriodId}
-            onChange={setField("warrantyPeriodId")}
-          >
-            <option value="">No warranty</option>
-            {warrantyPeriods.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="text-sm font-medium text-gray-700">
-          Warranty expire
-          <input
-            className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            name="warrantyExpire"
-            type="date"
-            value={form.warrantyExpire}
-            onChange={setField("warrantyExpire")}
-          />
-        </label>
-      </div>
-
-      {errors.general && (
-        <div className="text-sm text-red-600">{errors.general}</div>
-      )}
+      {errors.general && <div className="text-sm text-red-600">{errors.general}</div>}
 
       <div className="flex justify-end">
         <Button type="submit" disabled={isSubmitting}>

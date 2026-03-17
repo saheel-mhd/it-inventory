@@ -14,9 +14,6 @@ export default function LogoutButton({ className }: LogoutButtonProps) {
     fetch("/api/logout", { method: "POST" })
       .catch(() => null)
       .finally(() => {
-        try {
-          localStorage.removeItem("user");
-        } catch {}
         router.replace("/login");
       });
   };

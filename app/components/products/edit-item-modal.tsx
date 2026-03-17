@@ -1,17 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import ProductFormFields from "~/app/components/products/product-form-fields";
+import {
+  emptyProductForm,
+  Option,
+  ProductFormErrors,
+  ProductFormState,
+  ProductStatusOption,
+} from "~/app/components/products/product-form-types";
 import Button from "~/app/components/ui/button";
-
-type Option = {
-  id: string;
-  name: string;
-};
-
-type ProductStatusOption = {
-  value: string;
-  label: string;
-};
 
 type ProductData = {
   id: string;
@@ -40,38 +38,6 @@ type EditItemModalProps = {
   onSaved?: () => void;
 };
 
-type FormState = {
-  product: string;
-  brand: string;
-  snNumber: string;
-  sku: string;
-  specification: string;
-  orderedDate: string;
-  cost: string;
-  warrantyPeriodId: string;
-  warrantyExpire: string;
-  categoryId: string;
-  assetTypeId: string;
-  status: string;
-};
-
-type FormErrors = Partial<Record<keyof FormState | "general", string>>;
-
-const emptyForm: FormState = {
-  product: "",
-  brand: "",
-  snNumber: "",
-  sku: "",
-  specification: "",
-  orderedDate: "",
-  cost: "",
-  warrantyPeriodId: "",
-  warrantyExpire: "",
-  categoryId: "",
-  assetTypeId: "",
-  status: "",
-};
-
 export default function EditItemModal({
   open,
   product,
@@ -82,12 +48,13 @@ export default function EditItemModal({
   onClose,
   onSaved,
 }: EditItemModalProps) {
-  const [form, setForm] = useState<FormState>(emptyForm);
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [form, setForm] = useState<ProductFormState>(emptyProductForm);
+  const [errors, setErrors] = useState<ProductFormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (!product) return;
+
     setForm({
       product: product.product ?? "",
       brand: product.brand ?? "",
@@ -114,25 +81,24 @@ export default function EditItemModal({
     const period = warrantyPeriods.find((item) => item.id === form.warrantyPeriodId);
     const months = period?.months ?? 0;
     if (months === 0) return;
-    const baseDate = form.orderedDate
-      ? new Date(form.orderedDate)
-      : new Date();
+
+    const baseDate = form.orderedDate ? new Date(form.orderedDate) : new Date();
     const nextDate = new Date(baseDate);
     nextDate.setMonth(nextDate.getMonth() + months);
     setForm((prev) => ({
       ...prev,
       warrantyExpire: nextDate.toISOString().slice(0, 10),
     }));
-  }, [form.warrantyPeriodId, form.orderedDate, warrantyPeriods]);
+  }, [form.orderedDate, form.warrantyPeriodId, warrantyPeriods]);
 
   const setField =
-    (field: keyof FormState) =>
+    (field: keyof ProductFormState) =>
     (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       setForm((prev) => ({ ...prev, [field]: event.target.value }));
     };
 
   const validate = () => {
-    const nextErrors: FormErrors = {};
+    const nextErrors: ProductFormErrors = {};
     if (!form.product.trim()) nextErrors.product = "Product name is required.";
     if (!form.brand.trim()) nextErrors.brand = "Brand is required.";
     if (!form.sku.trim()) nextErrors.sku = "SKU is required.";
@@ -145,6 +111,7 @@ export default function EditItemModal({
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!product) return;
+
     const nextErrors = validate();
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
@@ -209,175 +176,18 @@ export default function EditItemModal({
               Close
             </button>
           </div>
+
           <div className="p-4">
             <form className="space-y-4" onSubmit={onSubmit}>
-              <div className="grid gap-4 md:grid-cols-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Product name
-                  <input
-                    className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    value={form.product}
-                    onChange={setField("product")}
-                  />
-                  {errors.product && (
-                    <div className="mt-1 text-xs text-red-600">{errors.product}</div>
-                  )}
-                </label>
-
-                <label className="text-sm font-medium text-gray-700">
-                  Brand
-                  <input
-                    className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    value={form.brand}
-                    onChange={setField("brand")}
-                  />
-                  {errors.brand && (
-                    <div className="mt-1 text-xs text-red-600">{errors.brand}</div>
-                  )}
-                </label>
-
-                <label className="text-sm font-medium text-gray-700">
-                  SN Number
-                  <input
-                    className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    value={form.snNumber}
-                    onChange={setField("snNumber")}
-                  />
-                  {errors.snNumber && (
-                    <div className="mt-1 text-xs text-red-600">{errors.snNumber}</div>
-                  )}
-                </label>
-
-                <label className="text-sm font-medium text-gray-700">
-                  SKU
-                  <input
-                    className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    value={form.sku}
-                    onChange={setField("sku")}
-                  />
-                  {errors.sku && (
-                    <div className="mt-1 text-xs text-red-600">{errors.sku}</div>
-                  )}
-                </label>
-
-                <label className="text-sm font-medium text-gray-700">
-                  Specification
-                  <input
-                    className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    value={form.specification}
-                    onChange={setField("specification")}
-                  />
-                </label>
-
-                <label className="text-sm font-medium text-gray-700">
-                  Ordered date
-                  <input
-                    className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    type="date"
-                    value={form.orderedDate}
-                    onChange={setField("orderedDate")}
-                  />
-                </label>
-
-                <label className="text-sm font-medium text-gray-700">
-                  Cost
-                  <input
-                    className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={form.cost}
-                    onChange={setField("cost")}
-                  />
-                </label>
-
-                <label className="text-sm font-medium text-gray-700">
-                  Warranty
-                  <select
-                    className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"
-                    value={form.warrantyPeriodId}
-                    onChange={setField("warrantyPeriodId")}
-                  >
-                    <option value="">No warranty</option>
-                    {warrantyPeriods.map((option) => (
-                      <option key={option.id} value={option.id}>
-                        {option.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="text-sm font-medium text-gray-700">
-                  Warranty expire
-                  <input
-                    className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    type="date"
-                    value={form.warrantyExpire}
-                    onChange={setField("warrantyExpire")}
-                  />
-                </label>
-
-                <label className="text-sm font-medium text-gray-700">
-                  Category
-                  <select
-                    className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"
-                    value={form.categoryId}
-                    onChange={setField("categoryId")}
-                  >
-                    <option value="">Select category</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.categoryId && (
-                    <div className="mt-1 text-xs text-red-600">
-                      {errors.categoryId}
-                    </div>
-                  )}
-                </label>
-
-                <label className="text-sm font-medium text-gray-700">
-                  Asset type
-                  <select
-                    className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"
-                    value={form.assetTypeId}
-                    onChange={setField("assetTypeId")}
-                  >
-                    <option value="">Select asset type</option>
-                    {assetTypes.map((assetType) => (
-                      <option key={assetType.id} value={assetType.id}>
-                        {assetType.name}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.assetTypeId && (
-                    <div className="mt-1 text-xs text-red-600">
-                      {errors.assetTypeId}
-                    </div>
-                  )}
-                </label>
-
-                <label className="text-sm font-medium text-gray-700">
-                  Status
-                  <select
-                    className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"
-                    value={form.status}
-                    onChange={setField("status")}
-                  >
-                    <option value="">Select status</option>
-                    {statusOptions.map((status) => (
-                      <option key={status.value} value={status.value}>
-                        {status.label}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.status && (
-                    <div className="mt-1 text-xs text-red-600">{errors.status}</div>
-                  )}
-                </label>
-              </div>
+              <ProductFormFields
+                form={form}
+                errors={errors}
+                categories={categories}
+                assetTypes={assetTypes}
+                warrantyPeriods={warrantyPeriods}
+                statusOptions={statusOptions}
+                onFieldChange={setField}
+              />
 
               {errors.general && (
                 <div className="text-sm text-red-600">{errors.general}</div>

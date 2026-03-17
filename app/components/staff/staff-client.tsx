@@ -4,14 +4,13 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import AddStaffModal from "~/app/components/staff/add-staff-modal";
 import AssignProductModal from "~/app/components/staff/assign-product-modal";
-import EditStaffModal from "~/app/components/staff/edit-staff-modal";
 import ResignStaffModal from "~/app/components/staff/resign-staff-modal";
 import ResignStaffPickerModal from "~/app/components/staff/resign-staff-picker-modal";
-import ReturnProductModal from "~/app/components/staff/return-product-modal";
-import Button from "~/app/components/ui/button";
+import StaffDetailsModal from "~/app/components/staff/staff-details-modal";
+import { ProductOption, StaffRow } from "~/app/components/staff/staff-types";
 import DataPagination from "~/app/components/ui/data-pagination";
 import FilterPanel from "~/app/components/ui/filter-panel";
-import { IconEye, IconLogout, IconReturn } from "~/app/components/ui/icons";
+import { IconEye, IconLogout } from "~/app/components/ui/icons";
 import LiveSearchInput from "~/app/components/ui/live-search-input";
 import RowsPerPageSelect from "~/app/components/ui/rows-per-page-select";
 import {
@@ -22,34 +21,6 @@ import {
   TableHeader,
   TableRow,
 } from "~/app/components/ui/table";
-
-type ProductOption = {
-  id: string;
-  sku: string;
-  product: string;
-};
-
-type StaffInventoryRow = {
-  id: string;
-  product: ProductOption;
-  quantity: number;
-  startDate: string;
-  returnDate: string | null;
-  returnReason?: string | null;
-  returnReasonNote?: string | null;
-};
-
-type StaffRow = {
-  id: string;
-  name: string;
-  department: string;
-  departmentId: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-  inventoryUsingCount: number;
-  inventoryUsing: StaffInventoryRow[];
-};
 
 type StaffClientProps = {
   staff: StaffRow[];
@@ -101,7 +72,7 @@ export default function StaffClient({
     if (pageSize) params.set("pageSize", String(pageSize));
     if (activeState) params.set("activeState", activeState);
     params.set("page", String(nextPage));
-    return `/dashboard/users?${params.toString()}`;
+    return `/users?${params.toString()}`;
   };
 
   const updateFilter = (next: {
@@ -124,7 +95,7 @@ export default function StaffClient({
     params.delete("page");
 
     const query = params.toString();
-    router.replace(query ? `/dashboard/users?${query}` : "/dashboard/users", { scroll: false });
+    router.replace(query ? `/users?${query}` : "/users", { scroll: false });
   };
 
   return (
@@ -161,7 +132,6 @@ export default function StaffClient({
             </option>
           ))}
         </select>
-
         <select
           name="activeState"
           value={activeState}
@@ -171,7 +141,6 @@ export default function StaffClient({
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
         </select>
-
         <select
           name="sort"
           value={sort}
@@ -254,125 +223,15 @@ export default function StaffClient({
         </div>
       </div>
 
-      {selectedStaff && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <button
-            type="button"
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setSelectedStaff(null)}
-            aria-label="Close staff details"
-          />
-          <div className="relative w-full max-w-3xl px-4" role="dialog" aria-modal="true">
-            <div className="rounded-2xl bg-white shadow-xl">
-              <div className="flex items-center justify-between border-b px-5 py-4">
-                <div>
-                  <div className="text-lg font-semibold text-gray-900">{selectedStaff.name}</div>
-                  <div className="text-sm text-gray-500">{toLabel(selectedStaff.department)}</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button type="button" onClick={() => setEditingStaff(selectedStaff)}>
-                    Edit
-                  </Button>
-                  <button
-                    type="button"
-                    className="rounded-md px-2 py-1 text-sm text-gray-500 hover:bg-gray-100"
-                    onClick={() => setSelectedStaff(null)}
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid gap-4 px-5 py-4 md:grid-cols-2">
-                <div className="space-y-1">
-                  <div className="text-xs font-semibold uppercase text-gray-400">Name</div>
-                  <div className="text-sm text-gray-900">{selectedStaff.name}</div>
-                </div>
-                <div className="space-y-1">
-                  <div className="text-xs font-semibold uppercase text-gray-400">Department</div>
-                  <div className="text-sm text-gray-900">{toLabel(selectedStaff.department)}</div>
-                </div>
-                <div className="space-y-1">
-                  <div className="text-xs font-semibold uppercase text-gray-400">Inventory Using</div>
-                  <div className="text-sm text-gray-900">{selectedStaff.inventoryUsingCount}</div>
-                </div>
-                <div className="space-y-1">
-                  <div className="text-xs font-semibold uppercase text-gray-400">Updated</div>
-                  <div className="text-sm text-gray-900">
-                    {new Date(selectedStaff.updatedAt).toLocaleDateString()}
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-t px-5 py-4">
-                <div className="mb-3 text-sm font-semibold text-gray-700">Assigned Inventory</div>
-                <div className="space-y-2">
-                  {selectedStaff.inventoryUsing.map((assignment) => (
-                    <div
-                      key={assignment.id}
-                      className="grid gap-2 rounded-lg border border-gray-200 p-3 md:grid-cols-5"
-                    >
-                      <div>
-                        <div className="text-xs font-semibold uppercase text-gray-400">SKU</div>
-                        <div className="text-sm text-gray-900">{assignment.product.sku}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs font-semibold uppercase text-gray-400">Product</div>
-                        <div className="text-sm text-gray-900">{assignment.product.product}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs font-semibold uppercase text-gray-400">Quantity</div>
-                        <div className="text-sm text-gray-900">{assignment.quantity}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs font-semibold uppercase text-gray-400">Assigned At</div>
-                        <div className="text-sm text-gray-900">
-                          {new Date(assignment.startDate).toLocaleDateString()}
-                        </div>
-                      </div>
-                      <div className="flex items-end justify-end">
-                        {assignment.returnDate ? (
-                          <div className="text-xs text-gray-500">Returned</div>
-                        ) : (
-                          <ReturnProductModal
-                            assignmentId={assignment.id}
-                            productName={assignment.product.product}
-                            sku={assignment.product.sku}
-                            staffName={selectedStaff.name}
-                            triggerLabel=""
-                            triggerIcon={<IconReturn className="h-4 w-4" />}
-                            triggerClassName="inline-flex items-center justify-center rounded-md px-2 py-1 text-sm text-gray-600 hover:bg-gray-100"
-                            onSaved={() => setSelectedStaff(null)}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                  {selectedStaff.inventoryUsing.length === 0 && (
-                    <div className="text-sm text-gray-500">No inventory assigned yet.</div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <EditStaffModal
-        open={Boolean(editingStaff)}
-        staff={
-          editingStaff
-            ? {
-                id: editingStaff.id,
-                name: editingStaff.name,
-                departmentId: editingStaff.departmentId,
-              }
-            : null
-        }
+      <StaffDetailsModal
+        staff={selectedStaff}
+        editingStaff={editingStaff}
+        setEditingStaff={setEditingStaff}
         products={products}
         departments={departments}
-        onClose={() => setEditingStaff(null)}
-        onSaved={(next) => {
+        onClose={() => setSelectedStaff(null)}
+        onRefresh={() => router.refresh()}
+        onUpdateSelected={(next) => {
           setSelectedStaff((prev) =>
             prev
               ? {
@@ -383,8 +242,6 @@ export default function StaffClient({
                 }
               : prev,
           );
-          setEditingStaff(null);
-          router.refresh();
         }}
       />
     </div>

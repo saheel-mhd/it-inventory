@@ -11,14 +11,14 @@ import {
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: IconHome },
-  { label: "Inventory", href: "/dashboard/inventory", icon: IconInventory },
-  { label: "Staff", href: "/dashboard/users", icon: IconUsers },
-  { label: "Reports", href: "/dashboard/reports", icon: IconReport },
+  { label: "Inventory", href: "/inventory", icon: IconInventory },
+  { label: "Staff", href: "/users", icon: IconUsers },
+  { label: "Reports", href: "/reports", icon: IconReport },
 ];
 
 const secondaryItems = [
-  { label: "Settings", href: "/dashboard/settings", icon: IconSettings },
-  { label: "Account", href: "/dashboard/account", icon: IconAccount },
+  { label: "Settings", href: "/settings", icon: IconSettings },
+  { label: "Account", href: "/account", icon: IconAccount },
 ];
 
 export default function Sidebar() {

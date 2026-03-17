@@ -1,14 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import Button from "~/app/components/ui/button";
-import DataPagination from "~/app/components/ui/data-pagination";
-import RowsPerPageSelect from "~/app/components/ui/rows-per-page-select";
+import ProductDetailsModal from "~/app/components/inventory/product-details-modal";
+import { InventoryOption, InventoryProduct } from "~/app/components/inventory/types";
+import InventoryToolbar from "~/app/components/inventory/toolbar";
 import DamageModal from "~/app/components/products/damage-modal";
 import EditItemModal from "~/app/components/products/edit-item-modal";
-import InventoryToolbar from "~/app/components/inventory/toolbar";
 import ReturnProductModal from "~/app/components/staff/return-product-modal";
 import { IconReturn } from "~/app/components/ui/icons";
+import DataPagination from "~/app/components/ui/data-pagination";
+import RowsPerPageSelect from "~/app/components/ui/rows-per-page-select";
 import {
   Table,
   TableBody,
@@ -18,40 +20,10 @@ import {
   TableRow,
 } from "~/app/components/ui/table";
 
-type Option = {
-  id: string;
-  name: string;
-  assetTypeId?: string | null;
-  prefix?: string | null;
-  isActive?: boolean;
-};
-
-type Product = {
-  id: string;
-  product: string;
-  brand: string;
-  snNumber: string | null;
-  sku: string;
-  specification: string | null;
-  orderedDate: string | null;
-  cost: string | null;
-  warrantyPeriodId: string | null;
-  warrantyName: string | null;
-  warrantyExpire: string | null;
-  categoryId: string;
-  assetTypeId: string;
-  assignedTo: string | null;
-  activeAssignmentId: string | null;
-  status: string;
-  createdAt: string;
-  category?: Option | null;
-  assetType?: Option | null;
-};
-
 type InventoryClientProps = {
-  initialProducts: Product[];
-  categories: Option[];
-  assetTypes: Option[];
+  initialProducts: InventoryProduct[];
+  categories: InventoryOption[];
+  assetTypes: InventoryOption[];
   warrantyPeriods: Array<{ id: string; name: string; months: number }>;
   statusOptions: Array<{ value: string; label: string }>;
   assignProducts: Array<{ id: string; sku: string; product: string }>;
@@ -75,17 +47,12 @@ export default function InventoryClient({
   assignProducts,
   staffOptions,
 }: InventoryClientProps) {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
-  const [filters, setFilters] = useState({
-    q: "",
-    categoryId: "",
-    status: "",
-    sort: "updated_desc",
-  });
+  const [products, setProducts] = useState<InventoryProduct[]>(initialProducts);
+  const [filters, setFilters] = useState({ q: "", categoryId: "", status: "", sort: "updated_desc" });
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [damageProduct, setDamageProduct] = useState<Product | null>(null);
-  const [editProduct, setEditProduct] = useState<Product | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<InventoryProduct | null>(null);
+  const [damageProduct, setDamageProduct] = useState<InventoryProduct | null>(null);
+  const [editProduct, setEditProduct] = useState<InventoryProduct | null>(null);
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const activeRequest = useRef(0);
@@ -119,9 +86,7 @@ export default function InventoryClient({
     return () => clearTimeout(handle);
   }, [queryString]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [queryString]);
+  useEffect(() => setCurrentPage(1), [queryString]);
 
   const totalPages = Math.max(1, Math.ceil(products.length / pageSize));
 
@@ -184,7 +149,7 @@ export default function InventoryClient({
                         onClick={() => setSelectedProduct(item)}
                         aria-label="View product"
                       >
-                        👁️
+                        View
                       </button>
                       {item.activeAssignmentId && (
                         <ReturnProductModal
@@ -198,6 +163,15 @@ export default function InventoryClient({
                           onSaved={() => loadProducts(queryString)}
                         />
                       )}
+                      {item.activeAssignmentId && (
+                        <Link
+                          href={`/handovers/${item.activeAssignmentId}`}
+                          target="_blank"
+                          className="inline-flex items-center justify-center rounded-md px-2 py-1 text-xs font-medium text-gray-600 hover:bg-gray-100"
+                        >
+                          Print
+                        </Link>
+                      )}
                       {item.status !== "DAMAGED" && (
                         <button
                           type="button"
@@ -205,7 +179,7 @@ export default function InventoryClient({
                           onClick={() => setDamageProduct(item)}
                           aria-label="Mark damaged"
                         >
-                          🛠️
+                          Damage
                         </button>
                       )}
                     </div>
@@ -230,74 +204,19 @@ export default function InventoryClient({
               setCurrentPage(1);
             }}
           />
-          <DataPagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
+          <DataPagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
         </div>
       </div>
 
-      {selectedProduct && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <button
-            type="button"
-            className="absolute inset-0 bg-black/40"
-            onClick={() => setSelectedProduct(null)}
-            aria-label="Close product details"
-          />
-          <div className="relative w-full max-w-3xl px-4" role="dialog" aria-modal="true">
-            <div className="rounded-2xl bg-white shadow-xl">
-              <div className="flex items-center justify-between border-b px-5 py-4">
-                <div>
-                  <div className="text-lg font-semibold text-gray-900">{selectedProduct.product}</div>
-                  <div className="text-sm text-gray-500">SKU: {selectedProduct.sku || "-"}</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      setEditProduct(selectedProduct);
-                      setSelectedProduct(null);
-                    }}
-                  >
-                    Edit
-                  </Button>
-                  <button
-                    type="button"
-                    className="rounded-md px-2 py-1 text-sm text-gray-500 hover:bg-gray-100"
-                    onClick={() => setSelectedProduct(null)}
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid gap-4 px-5 py-4 md:grid-cols-2">
-                <div className="space-y-1"><div className="text-xs font-semibold uppercase text-gray-400">Product</div><div className="text-sm text-gray-900">{selectedProduct.product}</div></div>
-                <div className="space-y-1"><div className="text-xs font-semibold uppercase text-gray-400">Brand</div><div className="text-sm text-gray-900">{selectedProduct.brand}</div></div>
-                <div className="space-y-1"><div className="text-xs font-semibold uppercase text-gray-400">Serial Number</div><div className="text-sm text-gray-900">{selectedProduct.snNumber ?? "-"}</div></div>
-                <div className="space-y-1"><div className="text-xs font-semibold uppercase text-gray-400">Specification</div><div className="text-sm text-gray-900">{selectedProduct.specification ?? "-"}</div></div>
-                <div className="space-y-1"><div className="text-xs font-semibold uppercase text-gray-400">Category</div><div className="text-sm text-gray-900">{selectedProduct.category?.name ?? "-"}</div></div>
-                <div className="space-y-1"><div className="text-xs font-semibold uppercase text-gray-400">Asset Type</div><div className="text-sm text-gray-900">{selectedProduct.assetType?.name ?? "-"}</div></div>
-                <div className="space-y-1"><div className="text-xs font-semibold uppercase text-gray-400">Ordered Date</div><div className="text-sm text-gray-900">{selectedProduct.orderedDate ? new Date(selectedProduct.orderedDate).toLocaleDateString() : "-"}</div></div>
-                <div className="space-y-1"><div className="text-xs font-semibold uppercase text-gray-400">Cost</div><div className="text-sm text-gray-900">{selectedProduct.cost ?? "-"}</div></div>
-                <div className="space-y-1"><div className="text-xs font-semibold uppercase text-gray-400">Warranty</div><div className="text-sm text-gray-900">{selectedProduct.warrantyName ?? "-"}</div></div>
-                <div className="space-y-1"><div className="text-xs font-semibold uppercase text-gray-400">Warranty Expire</div><div className="text-sm text-gray-900">{selectedProduct.warrantyExpire ? new Date(selectedProduct.warrantyExpire).toLocaleDateString() : "-"}</div></div>
-                <div className="space-y-1"><div className="text-xs font-semibold uppercase text-gray-400">Assigned To</div><div className="text-sm text-gray-900">{selectedProduct.assignedTo ?? "-"}</div></div>
-                <div className="space-y-1">
-                  <div className="text-xs font-semibold uppercase text-gray-400">Status</div>
-                  <div className="flex items-center gap-2 text-sm text-gray-900">
-                    <span className={`inline-block h-2.5 w-2.5 rounded-full ${STATUS_COLORS[selectedProduct.status] ?? "bg-gray-400"}`} />
-                    <span>{selectedProduct.status}</span>
-                  </div>
-                </div>
-                <div className="space-y-1"><div className="text-xs font-semibold uppercase text-gray-400">Created</div><div className="text-sm text-gray-900">{new Date(selectedProduct.createdAt).toLocaleDateString()}</div></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ProductDetailsModal
+        product={selectedProduct}
+        statusColors={STATUS_COLORS}
+        onClose={() => setSelectedProduct(null)}
+        onEdit={(product) => {
+          setEditProduct(product);
+          setSelectedProduct(null);
+        }}
+      />
 
       <DamageModal
         open={Boolean(damageProduct)}

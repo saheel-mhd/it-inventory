@@ -1,22 +1,7 @@
-'use client'
+import { redirect } from "next/navigation";
+import { getActiveSessionStatusUser } from "~/server/auth/session";
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-
-export default function HomePage() {
-  const router = useRouter()
-
-  useEffect(() => {
-    // Example: user info stored after login
-    // localStorage.setItem('user', JSON.stringify({ id: 1, name: 'John' }))
-    const user = localStorage.getItem('user')
-
-    if (user) {
-      router.replace('/dashboard')
-    } else {
-      router.replace('/login')
-    }
-  }, [router])
-
-  return null // or a loading spinner
+export default async function HomePage() {
+  const user = await getActiveSessionStatusUser();
+  redirect(user ? "/dashboard" : "/login");
 }

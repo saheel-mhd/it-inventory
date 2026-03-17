@@ -69,49 +69,59 @@ model Product {
 }
 
 model Category {
-  id       String    @id @default(cuid())
-  name     String    @unique
-  prefix   String?
-  isActive Boolean   @default(true)
+  id         String    @id @default(cuid())
+  name       String    @unique
+  prefix     String?
+  isActive   Boolean   @default(true)
+  createdBy  String?
+  updatedBy  String?
   assetTypeId String?
   assetType AssetType? @relation(fields: [assetTypeId], references: [id])
   products Product[]
 }
 
 model AssetType {
-  id       String    @id @default(cuid())
-  name     String    @unique
-  isActive Boolean   @default(true)
+  id         String    @id @default(cuid())
+  name       String    @unique
+  isActive   Boolean   @default(true)
+  createdBy  String?
+  updatedBy  String?
   products Product[]
   categories Category[]
 }
 
 model Staff {
-  id        String           @id @default(cuid())
-  name      String
+  id         String           @id @default(cuid())
+  name       String
   departmentId String
-  isActive  Boolean          @default(true)
+  isActive   Boolean          @default(true)
+  createdBy  String?
+  updatedBy  String?
   department DepartmentModel @relation(fields: [departmentId], references: [id])
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
 
   inventoryUsing StaffInventory[]
 }
 
 model DepartmentModel {
-  id       String   @id @default(cuid())
-  code     String   @unique
-  name     String   @unique
-  isActive Boolean  @default(true)
-  staffs   Staff[]
+  id         String   @id @default(cuid())
+  code       String   @unique
+  name       String   @unique
+  isActive   Boolean  @default(true)
+  createdBy  String?
+  updatedBy  String?
+  staffs     Staff[]
 }
 
 model WarrantyPeriodModel {
-  id       String    @id @default(cuid())
-  code     String    @unique
-  name     String    @unique
-  months   Int
-  isActive Boolean   @default(true)
+  id         String    @id @default(cuid())
+  code       String    @unique
+  name       String    @unique
+  months     Int
+  isActive   Boolean   @default(true)
+  createdBy  String?
+  updatedBy  String?
   products Product[]
 }
 
@@ -124,7 +134,9 @@ model StaffInventory {
   returnDate      DateTime?
   returnReason    ReturnReason?
   returnReasonNote String?
+  createdBy       String?
   createdAt       DateTime @default(now())
+  updatedBy       String?
   updatedAt       DateTime @updatedAt
 
   staff   Staff   @relation(fields: [staffId], references: [id])
@@ -153,10 +165,28 @@ model ProductService {
   serviceMessage      String?
   serviceFailureReason String?
 
+  createdBy           String?
   createdAt           DateTime  @default(now())
+  updatedBy           String?
   updatedAt           DateTime  @updatedAt
 
   @@index([productId])
   @@index([sentToService])
   @@index([serviced])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String
+  entityType  String
+  entityId    String?
+  actorUserId String
+  actorName   String
+  summary     String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([actorUserId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
 }

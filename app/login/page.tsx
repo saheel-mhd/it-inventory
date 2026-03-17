@@ -1,40 +1,39 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Button from '~/app/components/ui/button'
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Button from "~/app/components/ui/button";
 
 export default function LoginPage() {
-  const router = useRouter()
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const router = useRouter();
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError(null)
-    setLoading(true)
+  async function onSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    setError(null);
+    setLoading(true);
 
     try {
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
-      })
+      });
 
-      const data = await res.json().catch(() => ({}))
-
-      if (!res.ok) {
-        setError(data?.message || 'Login failed.')
-        return
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setError(data?.message || "Login failed.");
+        return;
       }
 
-      router.replace('/dashboard')
+      router.replace("/dashboard");
     } catch {
-      setError('Network error. Please try again.')
+      setError("Network error. Please try again.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -54,7 +53,7 @@ export default function LoginPage() {
               </label>
               <input
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={(event) => setUsername(event.target.value)}
                 autoComplete="username"
                 required
                 className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
@@ -69,7 +68,7 @@ export default function LoginPage() {
               <input
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(event) => setPassword(event.target.value)}
                 autoComplete="current-password"
                 required
                 className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
@@ -88,15 +87,15 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full justify-center disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {loading ? 'Logging in…' : 'Login'}
+              {loading ? "Logging in..." : "Login"}
             </Button>
           </form>
         </div>
 
         <p className="mt-4 text-center text-xs text-gray-500">
-          © {new Date().getFullYear()} Inventory System
+          Copyright {new Date().getFullYear()} Inventory System
         </p>
       </div>
     </main>
-  )
+  );
 }
