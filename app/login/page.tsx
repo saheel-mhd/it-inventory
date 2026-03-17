@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Button from "~/app/components/ui/button";
+import { APP_DESCRIPTION, APP_NAME } from "~/lib/app-brand";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -39,12 +40,39 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-lg">
         <div className="rounded-2xl border surface-card p-6 shadow-sm">
-          <h1 className="text-2xl font-bold tracking-tight">Login</h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Sign in to access the dashboard.
-          </p>
+          <div className="rounded-xl border border-gray-200 bg-gray-100 p-4">
+            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-gray-500">
+              {APP_NAME}
+            </div>
+            <h1 className="mt-2 text-2xl font-bold tracking-tight text-gray-900">
+              Asset custody with clear accountability
+            </h1>
+            <p className="mt-2 text-sm leading-6 text-gray-600">
+              {APP_DESCRIPTION}
+            </p>
+            <div className="mt-4 grid gap-2 text-sm text-gray-700 sm:grid-cols-3">
+              <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
+                Track assignments
+              </div>
+              <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
+                Manage returns
+              </div>
+              <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
+                Review audit history
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <h2 className="text-xl font-bold tracking-tight text-gray-900">
+              Admin sign in
+            </h2>
+            <p className="mt-1 text-sm text-gray-600">
+              Use your admin account to access the dashboard and protected actions.
+            </p>
+          </div>
 
           <form onSubmit={onSubmit} className="mt-6 space-y-4">
             <div>
@@ -90,10 +118,14 @@ export default function LoginPage() {
               {loading ? "Logging in..." : "Login"}
             </Button>
           </form>
+
+          <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+            Authorized administrators only. Activity may be recorded for accountability.
+          </div>
         </div>
 
         <p className="mt-4 text-center text-xs text-gray-500">
-          Copyright {new Date().getFullYear()} Inventory System
+          Copyright {new Date().getFullYear()} {APP_NAME}
         </p>
       </div>
     </main>

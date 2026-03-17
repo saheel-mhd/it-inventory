@@ -1,5 +1,7 @@
 import "./globals.css";
+import type { Metadata } from "next";
 import { Bodoni_Moda, Courier_Prime, Sanchez } from "next/font/google";
+import { APP_DESCRIPTION, APP_NAME } from "~/lib/app-brand";
 
 const headingFont = Bodoni_Moda({
   subsets: ["latin"],
@@ -18,6 +20,11 @@ const navFont = Sanchez({
   weight: ["400"],
   variable: "--font-nav",
 });
+
+export const metadata: Metadata = {
+  title: APP_NAME,
+  description: APP_DESCRIPTION,
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

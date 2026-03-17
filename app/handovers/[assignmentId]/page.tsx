@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import UnauthorizedView from "~/app/components/auth/unauthorized-view";
 import PrintButton from "~/app/components/ui/print-button";
 import { prisma } from "~/lib/prisma";
+import { APP_NAME } from "~/lib/app-brand";
 import { getActiveSessionStatusUser } from "~/server/auth/session";
 
 const formatDateTime = (value: Date | null) => {
@@ -99,7 +100,7 @@ export default async function HandoverFormPage({
         <div className="flex flex-wrap items-start justify-between gap-4 border-b pb-4">
           <div>
             <div className="text-xs uppercase tracking-wide text-gray-400">
-              IT Inventory System
+              {APP_NAME}
             </div>
             <div className="text-2xl font-semibold text-gray-900">{formTitle}</div>
           </div>

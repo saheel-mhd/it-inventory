@@ -1,5 +1,6 @@
 import Link from "next/link";
 import LogoutButton from "~/app/components/logout-button";
+import { APP_NAME } from "~/lib/app-brand";
 import {
   IconAccount,
   IconHome,
@@ -26,7 +27,7 @@ export default function Sidebar() {
     <aside className="fixed left-0 top-0 z-40 h-screen w-60 border-r border-gray-300 bg-gray-50 p-4 shadow-sm">
       <div className="flex h-full flex-col">
         <div className="mb-6 rounded-lg border border-gray-300 bg-gray-200 px-3 py-2 text-lg font-extrabold text-gray-800 font-nav tracking-wide shadow-sm">
-          Inventory System
+          {APP_NAME}
         </div>
 
         <nav className="space-y-1">
