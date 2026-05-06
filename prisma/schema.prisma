@@ -21,12 +21,19 @@ enum ReturnReason {
   OTHER
 }
 
+enum UserRole {
+  ADMIN
+  MANAGER
+  USER
+}
+
 model User {
   id         String   @id @default(cuid())
   name       String   @unique
   email      String?  @unique
-  password   String   
+  password   String
   isActive   Boolean  @default(true)
+  role       UserRole @default(USER)
 
   createdBy  String?
   createdAt  DateTime @default(now())
@@ -35,7 +42,45 @@ model User {
 
   lastLogin  DateTime?
 
+  sessions   Session[]
+
   @@index([name])
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  tokenHash  String   @unique
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  userAgent  String?
+  ip         String?
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id         String   @id @default(cuid())
+  tokenHash  String   @unique
+  userId     String
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+}
+
+model FailedLogin {
+  id         String   @id @default(cuid())
+  username   String
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([username, createdAt])
+  @@index([ip, createdAt])
 }
 
 model Product {
@@ -56,6 +101,9 @@ model Product {
   assetTypeId   String
   assetType     AssetType     @relation(fields: [assetTypeId], references: [id])
 
+  locationId    String?
+  location      Location?     @relation(fields: [locationId], references: [id])
+
   createdBy     String?
   createdAt     DateTime      @default(now())
   updatedBy     String?
@@ -66,6 +114,38 @@ model Product {
 
   staffAssignments StaffInventory[]
   services        ProductService[]
+  attachments     Attachment[]
+}
+
+model Location {
+  id         String    @id @default(cuid())
+  code       String    @unique
+  name       String    @unique
+  address    String?
+  isActive   Boolean   @default(true)
+  createdBy  String?
+  updatedBy  String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  products   Product[]
+}
+
+model Attachment {
+  id            String          @id @default(cuid())
+  filename      String
+  mimeType      String
+  sizeBytes     Int
+  storagePath   String
+  productId     String?
+  product       Product?        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  serviceId     String?
+  service       ProductService? @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  uploadedBy    String?
+  uploadedAt    DateTime        @default(now())
+
+  @@index([productId])
+  @@index([serviceId])
 }
 
 model Category {
@@ -169,6 +249,8 @@ model ProductService {
   createdAt           DateTime  @default(now())
   updatedBy           String?
   updatedAt           DateTime  @updatedAt
+
+  attachments         Attachment[]
 
   @@index([productId])
   @@index([sentToService])

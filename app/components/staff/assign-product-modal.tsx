@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Button from "~/app/components/ui/button";
+import { apiFetch } from "~/lib/api-fetch";
 
 type ProductOption = {
   id: string;
@@ -69,7 +70,7 @@ export default function AssignProductModal({
 
     setIsSubmitting(true);
     try {
-      const response = await fetch("/api/staff/assign", {
+      const response = await apiFetch("/api/staff/assign", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

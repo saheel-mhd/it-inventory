@@ -1,4 +1,4 @@
 import { assignProductToStaff } from "~/server/controllers/staff-assignment-controller";
-import { withApiSession } from "~/server/middleware/auth";
+import { withApiManager } from "~/server/middleware/auth";
 
-export const POST = withApiSession(assignProductToStaff);
+export const POST = withApiManager(assignProductToStaff);

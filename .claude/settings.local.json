@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(where psql *)",
+      "Bash(psql --version)",
+      "PowerShell(Get-ChildItem \"C:\\\\Program Files\\\\PostgreSQL\" -Directory | Select-Object Name; $psql = Get-ChildItem \"C:\\\\Program Files\\\\PostgreSQL\" -Recurse -Filter \"psql.exe\" -ErrorAction SilentlyContinue | Select-Object -First 1; $psql.FullName)",
+      "PowerShell($candidates = @\\(\"C:\\\\Program Files\\\\PostgreSQL\\\\18\\\\bin\\\\psql.exe\",\"C:\\\\Program Files\\\\PostgreSQL\\\\17\\\\bin\\\\psql.exe\",\"C:\\\\Program Files\\\\PostgreSQL\\\\16\\\\bin\\\\psql.exe\",\"C:\\\\Program Files \\(x86\\)\\\\PostgreSQL\\\\18\\\\bin\\\\psql.exe\"\\); $candidates | ForEach-Object { if \\(Test-Path $_\\) { Write-Output \"FOUND: $_\" } })",
+      "PowerShell($env:PGPASSWORD = \"123\"; & \"C:\\\\Program Files\\\\PostgreSQL\\\\18\\\\bin\\\\psql.exe\" -U postgres -h localhost -p 5432 -l 2>&1)",
+      "PowerShell($env:PGPASSWORD = \"123\"; & \"C:\\\\Program Files\\\\PostgreSQL\\\\18\\\\bin\\\\psql.exe\" -U postgres -h localhost -p 5432 -d inventory -c \"\\\\dt\" 2>&1)",
+      "PowerShell($env:PGPASSWORD = \"123\"; & \"C:\\\\Program Files\\\\PostgreSQL\\\\18\\\\bin\\\\psql.exe\" -U postgres -h localhost -p 5432 -d inventory -c \"SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename;\" 2>&1)",
+      "PowerShell($env:PGPASSWORD = \"123\"; & \"C:\\\\Program Files\\\\PostgreSQL\\\\18\\\\bin\\\\psql.exe\" -U postgres -h localhost -p 5432 -d inventory -c 'SELECT id, name, email, \"isActive\" FROM \"User\";' 2>&1)",
+      "PowerShell($env:PGPASSWORD = \"123\"; $tmp = Join-Path $env:TEMP \"q.sql\"; Set-Content -Path $tmp -Value 'SELECT name, email, \"isActive\", \"lastLogin\" FROM \"User\";' -Encoding ASCII; & \"C:\\\\Program Files\\\\PostgreSQL\\\\18\\\\bin\\\\psql.exe\" -U postgres -h localhost -p 5432 -d inventory -f $tmp; Remove-Item $tmp)",
+      "PowerShell($env:PGPASSWORD = \"123\"; $tmp = Join-Path $env:TEMP \"q.sql\"; Set-Content -Path $tmp -Value '\\\\d \"User\"' -Encoding ASCII; & \"C:\\\\Program Files\\\\PostgreSQL\\\\18\\\\bin\\\\psql.exe\" -U postgres -h localhost -p 5432 -d inventory -f $tmp; Remove-Item $tmp)",
+      "PowerShell($env:PGPASSWORD = \"123\"; $tmp = Join-Path $env:TEMP \"q.sql\"; Set-Content -Path $tmp -Value 'SELECT migration_name, finished_at IS NOT NULL AS finished, rolled_back_at FROM _prisma_migrations ORDER BY started_at;' -Encoding ASCII; & \"C:\\\\Program Files\\\\PostgreSQL\\\\18\\\\bin\\\\psql.exe\" -U postgres -h localhost -p 5432 -d inventory -f $tmp; Remove-Item $tmp)",
+      "Bash(npx prisma *)",
+      "Bash(node create-user.js admin Admin@123)",
+      "PowerShell($env:PGPASSWORD = \"123\"; $tmp = Join-Path $env:TEMP \"q.sql\"; Set-Content -Path $tmp -Value 'SELECT name, email, \"isActive\", \"createdAt\" FROM \"User\";' -Encoding ASCII; & \"C:\\\\Program Files\\\\PostgreSQL\\\\18\\\\bin\\\\psql.exe\" -U postgres -h localhost -p 5432 -d inventory -f $tmp; Remove-Item $tmp)",
+      "Bash(npm uninstall *)",
+      "Bash(echo \"---exit:$?---\")",
+      "Bash(npm install *)",
+      "Bash(npm test *)",
+      "PowerShell($env:PGPASSWORD = \"123\"; $tmp = Join-Path $env:TEMP \"q.sql\"; Set-Content -Path $tmp -Value \"UPDATE \\\\`\"User\\\\`\" SET role='ADMIN' WHERE name='admin';\" -Encoding ASCII; & \"C:\\\\Program Files\\\\PostgreSQL\\\\18\\\\bin\\\\psql.exe\" -U postgres -h localhost -p 5432 -d inventory -f $tmp; Remove-Item $tmp)",
+      "PowerShell($env:PGPASSWORD = \"123\"; & \"C:\\\\Program Files\\\\PostgreSQL\\\\18\\\\bin\\\\psql.exe\" -U postgres -h localhost -p 5432 -d inventory -f \"scripts/set-admin-role.sql\"; Remove-Item \"scripts/set-admin-role.sql\")",
+      "Bash(python)",
+      "Bash(mkdir -p \"app/api/products/[id]/barcode\" 2>&1)",
+      "Bash(mkdir -p \"app/api/products/[id]/attachments\" \"app/api/products/[id]/attachments/[attachmentId]\" 2>&1)",
+      "Bash(mkdir -p app/api/locations \"app/api/locations/[id]\" 2>&1)",
+      "Bash(node -e \"console.log\\(require\\('crypto'\\).randomBytes\\(48\\).toString\\('hex'\\)\\)\")"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\techsupport\\Documents\\GitHub\\GitHub\\it-inventory\\app\\api\\products\\[id]",
+      "C:\\Users\\techsupport\\Documents\\GitHub\\GitHub\\it-inventory\\app\\api\\locations"
+    ]
+  }
+}

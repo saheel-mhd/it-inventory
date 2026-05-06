@@ -1,4 +1,4 @@
 import { updateStaff } from "~/server/controllers/staff-controller";
-import { withApiSession } from "~/server/middleware/auth";
+import { withApiManager } from "~/server/middleware/auth";
 
-export const PATCH = withApiSession(updateStaff);
+export const PATCH = withApiManager(updateStaff);

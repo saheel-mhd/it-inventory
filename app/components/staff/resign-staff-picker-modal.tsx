@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Button from "~/app/components/ui/button";
 import SearchInput from "~/app/components/ui/search-input";
+import { apiFetch } from "~/lib/api-fetch";
 
 type StaffAssignment = {
   id: string;
@@ -57,7 +58,7 @@ export default function ResignStaffPickerModal({ staff }: ResignStaffPickerModal
     setError("");
     setIsSubmitting(true);
     try {
-      const response = await fetch("/api/staff/resign", {
+      const response = await apiFetch("/api/staff/resign", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Button from "~/app/components/ui/button";
+import { apiFetch } from "~/lib/api-fetch";
 
 type ReturnProductModalProps = {
   assignmentId: string;
@@ -95,7 +96,7 @@ export default function ReturnProductModal({
 
     setIsSubmitting(true);
     try {
-      const response = await fetch("/api/staff/return", {
+      const response = await apiFetch("/api/staff/return", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

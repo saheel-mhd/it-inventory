@@ -1,4 +1,4 @@
 import { importData } from "~/server/controllers/import-controller";
-import { withApiSession } from "~/server/middleware/auth";
+import { withApiManager } from "~/server/middleware/auth";
 
-export const POST = withApiSession(importData);
+export const POST = withApiManager(importData);

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Button from "~/app/components/ui/button";
+import { apiFetch } from "~/lib/api-fetch";
 
 type UserRow = {
   id: string;
@@ -56,7 +57,7 @@ export default function EditUserModal({ user, open, onClose, onSaved }: EditUser
 
     setIsSaving(true);
     try {
-      const response = await fetch(`/api/users/${user.id}`, {
+      const response = await apiFetch(`/api/users/${user.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

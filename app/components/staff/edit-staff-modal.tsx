@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Button from "~/app/components/ui/button";
+import { apiFetch } from "~/lib/api-fetch";
 
 type ProductOption = {
   id: string;
@@ -83,7 +84,7 @@ export default function EditStaffModal({
 
     setIsSubmitting(true);
     try {
-      const updateResponse = await fetch(`/api/staff/${staff.id}`, {
+      const updateResponse = await apiFetch(`/api/staff/${staff.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: name.trim(), departmentId }),
@@ -97,7 +98,7 @@ export default function EditStaffModal({
 
       const cleanedRows = rows.filter((row) => row.productId);
       for (const row of cleanedRows) {
-        const assignResponse = await fetch("/api/staff/assign", {
+        const assignResponse = await apiFetch("/api/staff/assign", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

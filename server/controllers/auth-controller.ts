@@ -6,12 +6,21 @@ import {
   createSessionResponse,
   getCurrentAdmin,
   getActiveSessionCredentialUser,
+  revokeAllSessionsForUser,
 } from "~/server/auth/session";
+import { validatePassword } from "~/server/auth/password-policy";
+import {
+  clearFailedLogins,
+  isLoginRateLimited,
+  recordFailedLogin,
+} from "~/server/auth/login-rate-limit";
+import { getClientIp } from "~/server/middleware/request-meta";
 import { parseJsonSafely } from "~/server/middleware/route";
 import {
   createActorUpdateFields,
   writeAuditLog,
 } from "~/server/services/audit-log";
+import { logger } from "~/lib/logger";
 
 type LoginPayload = {
   username?: string;
@@ -46,21 +55,43 @@ export async function login(request: Request) {
     );
   }
 
-  try {
-    const user = await prisma.user.findUnique({
-      where: { name: username },
-      select: { id: true, name: true, email: true, password: true, isActive: true },
-    });
+  // Pre-computed bcrypt hash of an empty string. Compared against when the
+  // username doesn't exist so the request takes the same time as a real
+  // failed login — prevents user enumeration via timing.
+  const DUMMY_HASH = "$2b$12$abcdefghijklmnopqrstuuOuTd5NIA9PFnpFBkqQdgg2spjhdvQ5C";
 
-    if (!user) {
+  const ip = getClientIp(request);
+  const userAgent = request.headers.get("user-agent");
+
+  try {
+    if (await isLoginRateLimited({ username, ip })) {
       return NextResponse.json(
-        { ok: false, message: "Invalid credentials." },
-        { status: 401 },
+        {
+          ok: false,
+          message:
+            "Too many failed attempts. Try again in a few minutes or contact admin.",
+        },
+        { status: 429 },
       );
     }
 
-    const isValid = await bcrypt.compare(password, user.password);
-    if (!isValid) {
+    const user = await prisma.user.findUnique({
+      where: { name: username },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        password: true,
+        isActive: true,
+        role: true,
+      },
+    });
+
+    const passwordToCompare = user?.password ?? DUMMY_HASH;
+    const isValid = await bcrypt.compare(password, passwordToCompare);
+
+    if (!user || !isValid) {
+      await recordFailedLogin({ username, ip });
       return NextResponse.json(
         { ok: false, message: "Invalid credentials." },
         { status: 401 },
@@ -74,29 +105,34 @@ export async function login(request: Request) {
       );
     }
 
+    await clearFailedLogins(username);
+
+    const actor = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role as "ADMIN" | "MANAGER" | "USER",
+    };
+
     await prisma.user.update({
       where: { id: user.id },
       data: {
         lastLogin: new Date(),
-        ...createActorUpdateFields({
-          id: user.id,
-          name: user.name,
-          email: user.email,
-        }),
+        ...createActorUpdateFields(actor),
       },
     });
 
     await writeAuditLog(prisma, {
-      actor: { id: user.id, name: user.name, email: user.email },
+      actor,
       action: "LOGIN",
       entityType: "User",
       entityId: user.id,
       summary: `${user.name} logged in.`,
     });
 
-    return createSessionResponse({ ok: true }, user.id);
+    return createSessionResponse({ ok: true }, user.id, { userAgent, ip });
   } catch (error) {
-    console.error("LOGIN API ERROR:", error);
+    logger.error("auth.login.failure", { username, ip }, error);
     return NextResponse.json(
       { ok: false, message: "Internal Server Error (check server logs)." },
       { status: 500 },
@@ -115,7 +151,7 @@ export async function logout() {
       summary: `${actor.name} logged out.`,
     });
   }
-  return clearSessionResponse({ ok: true });
+  return await clearSessionResponse({ ok: true });
 }
 
 export async function changePassword(request: Request) {
@@ -137,11 +173,9 @@ export async function changePassword(request: Request) {
     );
   }
 
-  if (newPassword.length < 6) {
-    return NextResponse.json(
-      { error: "New password must be at least 6 characters." },
-      { status: 400 },
-    );
+  const policy = validatePassword(newPassword);
+  if (!policy.ok) {
+    return NextResponse.json({ error: policy.error }, { status: 400 });
   }
 
   if (newPassword === currentPassword) {
@@ -160,20 +194,23 @@ export async function changePassword(request: Request) {
   }
 
   const hash = await bcrypt.hash(newPassword, 12);
+  const actor = {
+    id: sessionUser.id,
+    name: sessionUser.name,
+    email: sessionUser.email,
+    role: sessionUser.role as "ADMIN" | "MANAGER" | "USER",
+  };
   await prisma.user.update({
     where: { id: sessionUser.id },
-    data: {
-      password: hash,
-      ...createActorUpdateFields({
-        id: sessionUser.id,
-        name: sessionUser.name,
-        email: sessionUser.email,
-      }),
-    },
+    data: { password: hash, ...createActorUpdateFields(actor) },
   });
 
+  // Revoke all other sessions for this user — forces re-login on other
+  // devices after a password change.
+  await revokeAllSessionsForUser(sessionUser.id);
+
   await writeAuditLog(prisma, {
-    actor: { id: sessionUser.id, name: sessionUser.name, email: sessionUser.email },
+    actor,
     action: "PASSWORD_CHANGED",
     entityType: "User",
     entityId: sessionUser.id,

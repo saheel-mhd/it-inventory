@@ -1,10 +1,17 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { CurrentAdmin } from "~/server/auth/session";
 
 type AuditDbClient = PrismaClient | Prisma.TransactionClient;
 
+// Narrowed actor shape — writeAuditLog only needs id and name, plus the
+// ActorFields helpers only need id. Keeping this independent of CurrentAdmin
+// avoids ripple updates whenever the session shape gains fields.
+export type AuditActor = {
+  id: string;
+  name: string;
+};
+
 type AuditEntry = {
-  actor: CurrentAdmin;
+  actor: AuditActor;
   action: string;
   entityType: string;
   entityId?: string | null;
@@ -12,12 +19,12 @@ type AuditEntry = {
   metadata?: Prisma.InputJsonValue | null;
 };
 
-export const createActorCreateFields = (actor: CurrentAdmin) => ({
+export const createActorCreateFields = (actor: AuditActor) => ({
   createdBy: actor.id,
   updatedBy: actor.id,
 });
 
-export const createActorUpdateFields = (actor: CurrentAdmin) => ({
+export const createActorUpdateFields = (actor: AuditActor) => ({
   updatedBy: actor.id,
 });
 

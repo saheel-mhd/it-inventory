@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Button from "~/app/components/ui/button";
 import { DATASET_DEFINITIONS, type DatasetKey } from "~/lib/import-export";
+import { apiFetch } from "~/lib/api-fetch";
 
 type ImportError = { row: number; message: string };
 type ImportResult = {
@@ -73,7 +74,7 @@ export default function ImportExportClient() {
 
     updateState(key, { isUploading: true, error: null });
     try {
-      const response = await fetch(`/api/import?entity=${key}`, {
+      const response = await apiFetch(`/api/import?entity=${key}`, {
         method: "POST",
         body: formData,
       });

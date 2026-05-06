@@ -1,4 +1,4 @@
 import { createProductDamage } from "~/server/controllers/product-damage-controller";
-import { withApiSession } from "~/server/middleware/auth";
+import { withApiManager } from "~/server/middleware/auth";
 
-export const POST = withApiSession(createProductDamage);
+export const POST = withApiManager(createProductDamage);

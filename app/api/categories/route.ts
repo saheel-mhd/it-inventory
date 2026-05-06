@@ -1,4 +1,4 @@
 import { createCategory } from "~/server/controllers/category-controller";
-import { withApiSession } from "~/server/middleware/auth";
+import { withApiManager } from "~/server/middleware/auth";
 
-export const POST = withApiSession(createCategory);
+export const POST = withApiManager(createCategory);

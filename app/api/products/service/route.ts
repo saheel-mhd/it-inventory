@@ -1,4 +1,4 @@
 import { completeProductService } from "~/server/controllers/product-service-controller";
-import { withApiSession } from "~/server/middleware/auth";
+import { withApiManager } from "~/server/middleware/auth";
 
-export const POST = withApiSession(completeProductService);
+export const POST = withApiManager(completeProductService);

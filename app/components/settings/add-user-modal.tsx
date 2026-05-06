@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Button from "~/app/components/ui/button";
+import { apiFetch } from "~/lib/api-fetch";
 
 type AddUserModalProps = {
   onSaved?: () => void;
@@ -46,7 +47,7 @@ export default function AddUserModal({ onSaved }: AddUserModalProps) {
 
     setIsSaving(true);
     try {
-      const response = await fetch("/api/users", {
+      const response = await apiFetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

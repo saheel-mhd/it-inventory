@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, type FormEvent } from "react";
+import { apiFetch } from "~/lib/api-fetch";
 import { CONFIG_META } from "~/app/components/settings/configure-grid-config";
 import {
   ConfigureFormDialog,
@@ -152,7 +153,7 @@ export default function ConfigureGrid({
 
     setIsSaving(true);
     try {
-      const response = await fetch(activeMeta.createEndpoint, {
+      const response = await apiFetch(activeMeta.createEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(buildBody()),
@@ -184,7 +185,7 @@ export default function ConfigureGrid({
 
     setIsSaving(true);
     try {
-      const response = await fetch(`${activeMeta.itemEndpoint}/${editingItem.id}`, {
+      const response = await apiFetch(`${activeMeta.itemEndpoint}/${editingItem.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(buildBody()),
@@ -212,7 +213,7 @@ export default function ConfigureGrid({
     const nextActive = !item.isActive;
     setIsTogglingId(item.id);
     try {
-      const response = await fetch(`${activeMeta.itemEndpoint}/${item.id}`, {
+      const response = await apiFetch(`${activeMeta.itemEndpoint}/${item.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive: nextActive }),

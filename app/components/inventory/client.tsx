@@ -19,6 +19,7 @@ import {
   TableHeader,
   TableRow,
 } from "~/app/components/ui/table";
+import { apiFetch } from "~/lib/api-fetch";
 
 type InventoryClientProps = {
   initialProducts: InventoryProduct[];
@@ -71,7 +72,7 @@ export default function InventoryClient({
     activeRequest.current = requestId;
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/products?${query}`, { cache: "no-store" });
+      const response = await apiFetch(`/api/products?${query}`, { cache: "no-store" });
       if (!response.ok) return;
       const payload = await response.json();
       if (activeRequest.current !== requestId) return;

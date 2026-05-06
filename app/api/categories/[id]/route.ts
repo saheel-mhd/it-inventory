@@ -1,4 +1,4 @@
 import { updateCategory } from "~/server/controllers/category-controller";
-import { withApiSession } from "~/server/middleware/auth";
+import { withApiManager } from "~/server/middleware/auth";
 
-export const PATCH = withApiSession(updateCategory);
+export const PATCH = withApiManager(updateCategory);

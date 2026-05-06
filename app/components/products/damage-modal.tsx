@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { apiFetch } from "~/lib/api-fetch";
 import DamageModalSections from "~/app/components/products/damage-modal-sections";
 import Button from "~/app/components/ui/button";
 
@@ -67,7 +68,7 @@ export default function DamageModal({
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(isUnderService ? "/api/products/service" : "/api/products/damage", {
+      const response = await apiFetch(isUnderService ? "/api/products/service" : "/api/products/damage", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(

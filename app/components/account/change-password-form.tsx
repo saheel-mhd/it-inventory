@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Button from "~/app/components/ui/button";
+import { apiFetch } from "~/lib/api-fetch";
 
 const getStrength = (password: string) => {
   if (!password) return { label: "", color: "" };
@@ -40,7 +41,7 @@ export default function ChangePasswordForm() {
 
     setIsSaving(true);
     try {
-      const response = await fetch("/api/account/change-password", {
+      const response = await apiFetch("/api/account/change-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ currentPassword, newPassword }),

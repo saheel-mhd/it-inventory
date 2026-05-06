@@ -13,6 +13,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "~/app/components/ui/pagination";
+import { apiFetch } from "~/lib/api-fetch";
 import {
   Table,
   TableBody,
@@ -126,7 +127,7 @@ export default function UsersSettingsClient({
                       }`}
                       onClick={async () => {
                         const nextActive = !user.isActive;
-                        const response = await fetch(`/api/users/${user.id}`, {
+                        const response = await apiFetch(`/api/users/${user.id}`, {
                           method: "PATCH",
                           headers: { "Content-Type": "application/json" },
                           body: JSON.stringify({ isActive: nextActive }),

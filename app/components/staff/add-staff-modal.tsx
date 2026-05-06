@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Button from "~/app/components/ui/button";
+import { apiFetch } from "~/lib/api-fetch";
 
 type ProductOption = {
   id: string;
@@ -72,7 +73,7 @@ export default function AddStaffModal({ products, departments }: AddStaffModalPr
 
     setIsSubmitting(true);
     try {
-      const response = await fetch("/api/staff", {
+      const response = await apiFetch("/api/staff", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

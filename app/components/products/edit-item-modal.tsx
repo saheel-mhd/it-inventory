@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { apiFetch } from "~/lib/api-fetch";
 import ProductFormFields from "~/app/components/products/product-form-fields";
 import {
   emptyProductForm,
@@ -122,7 +123,7 @@ export default function EditItemModal({
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(`/api/products/${product.id}`, {
+      const response = await apiFetch(`/api/products/${product.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -1,4 +1,4 @@
 import { createDepartment } from "~/server/controllers/department-controller";
-import { withApiSession } from "~/server/middleware/auth";
+import { withApiManager } from "~/server/middleware/auth";
 
-export const POST = withApiSession(createDepartment);
+export const POST = withApiManager(createDepartment);

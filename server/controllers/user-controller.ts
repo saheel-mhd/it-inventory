@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { prisma } from "~/lib/prisma";
 import { getCurrentAdmin } from "~/server/auth/session";
+import { validatePassword } from "~/server/auth/password-policy";
 import { parseJson, serverError, RouteContext } from "~/server/middleware/route";
 import {
   createActorCreateFields,
@@ -38,11 +39,9 @@ export async function createUser(request: Request) {
   if (!isEmailValid(email)) {
     return NextResponse.json({ error: "Email format is invalid." }, { status: 400 });
   }
-  if (password.length < 6) {
-    return NextResponse.json(
-      { error: "Password must be at least 6 characters." },
-      { status: 400 },
-    );
+  const policy = validatePassword(password);
+  if (!policy.ok) {
+    return NextResponse.json({ error: policy.error }, { status: 400 });
   }
 
   try {
@@ -120,11 +119,9 @@ export async function updateUser(
   }
 
   if (typeof body.password === "string" && body.password.length > 0) {
-    if (body.password.length < 6) {
-      return NextResponse.json(
-        { error: "Password must be at least 6 characters." },
-        { status: 400 },
-      );
+    const policy = validatePassword(body.password);
+    if (!policy.ok) {
+      return NextResponse.json({ error: policy.error }, { status: 400 });
     }
     data.password = await bcrypt.hash(body.password, 12);
   }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { apiFetch } from "~/lib/api-fetch";
 import ProductFormFields from "~/app/components/products/product-form-fields";
 import {
   CategoryOption,
@@ -77,7 +78,7 @@ export default function AddItemForm({
 
     const loadNextSku = async () => {
       try {
-        const response = await fetch(
+        const response = await apiFetch(
           `/api/products/next-sku?categoryId=${encodeURIComponent(form.categoryId)}`,
           { signal: controller.signal, cache: "no-store" },
         );
@@ -127,7 +128,7 @@ export default function AddItemForm({
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/products", {
+      const response = await apiFetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

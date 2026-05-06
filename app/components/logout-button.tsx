@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { IconLogout } from "~/app/components/ui/icons";
+import { apiFetch } from "~/lib/api-fetch";
 
 type LogoutButtonProps = {
   className?: string;
@@ -11,7 +12,7 @@ export default function LogoutButton({ className }: LogoutButtonProps) {
   const router = useRouter();
 
   const onLogout = () => {
-    fetch("/api/logout", { method: "POST" })
+    apiFetch("/api/logout", { method: "POST" })
       .catch(() => null)
       .finally(() => {
         router.replace("/login");

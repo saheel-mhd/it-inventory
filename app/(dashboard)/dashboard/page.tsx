@@ -19,18 +19,48 @@ type CategoryStats = {
 };
 
 export default async function DashboardPage() {
-  const [staffCount, products, categories] = await Promise.all([
-    prisma.staff.count(),
-    prisma.product.findMany({
-      select: {
-        id: true,
-        status: true,
-        cost: true,
-        categoryId: true,
-      },
-    }),
-    prisma.category.findMany({ select: { id: true, name: true } }),
-  ]);
+  const now = new Date();
+  const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+  const [staffCount, products, categories, expiringSoon, recentAudit] =
+    await Promise.all([
+      prisma.staff.count(),
+      prisma.product.findMany({
+        select: {
+          id: true,
+          status: true,
+          cost: true,
+          categoryId: true,
+        },
+      }),
+      prisma.category.findMany({ select: { id: true, name: true } }),
+      prisma.product.findMany({
+        where: {
+          warrantyExpire: { gte: now, lte: in30Days },
+          status: { not: "DAMAGED" },
+        },
+        select: {
+          id: true,
+          product: true,
+          sku: true,
+          warrantyExpire: true,
+          category: { select: { name: true } },
+        },
+        orderBy: { warrantyExpire: "asc" },
+        take: 10,
+      }),
+      prisma.auditLog.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 5,
+        select: {
+          id: true,
+          action: true,
+          actorName: true,
+          summary: true,
+          createdAt: true,
+        },
+      }),
+    ]);
 
   const categoryMap = new Map<string, CategoryStats>();
   categories.forEach((category) => {
@@ -156,6 +186,63 @@ export default async function DashboardPage() {
               No categories available.
             </div>
           )}
+        </div>
+      </section>
+
+      <section className="mt-8 grid gap-4 lg:grid-cols-2">
+        <div className="rounded-2xl border bg-white p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="text-base font-semibold text-gray-900">
+              Warranty expiring (next 30 days)
+            </div>
+            <div className="text-xs text-gray-500">{expiringSoon.length} items</div>
+          </div>
+          <ul className="mt-3 divide-y divide-gray-100 text-sm">
+            {expiringSoon.map((item) => (
+              <li key={item.id} className="flex items-center justify-between py-2">
+                <div>
+                  <div className="font-medium text-gray-900">{item.product}</div>
+                  <div className="text-xs text-gray-500">
+                    {item.category.name} · {item.sku}
+                  </div>
+                </div>
+                <div className="text-xs font-medium text-amber-700">
+                  {item.warrantyExpire
+                    ? new Date(item.warrantyExpire).toLocaleDateString()
+                    : ""}
+                </div>
+              </li>
+            ))}
+            {expiringSoon.length === 0 && (
+              <li className="py-3 text-sm text-gray-500">
+                No items have warranties expiring in the next 30 days.
+              </li>
+            )}
+          </ul>
+        </div>
+
+        <div className="rounded-2xl border bg-white p-4 shadow-sm">
+          <div className="text-base font-semibold text-gray-900">
+            Recent activity
+          </div>
+          <ul className="mt-3 divide-y divide-gray-100 text-sm">
+            {recentAudit.map((entry) => (
+              <li key={entry.id} className="py-2">
+                <div className="text-gray-900">
+                  {entry.summary ?? entry.action}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {entry.actorName} ·{" "}
+                  {new Date(entry.createdAt).toLocaleString()}
+                </div>
+              </li>
+            ))}
+            {recentAudit.length === 0 && (
+              <li className="py-3 text-sm text-gray-500">
+                No activity recorded yet.
+              </li>
+            )}
+          </ul>
         </div>
       </section>
     </main>

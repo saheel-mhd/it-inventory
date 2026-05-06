@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CustodyHub
 
-## Getting Started
+IT asset / inventory management system. Tracks products, assigns them to staff, records services and damage, captures audit logs, and supports Excel import/export.
 
-First, run the development server:
+**Stack:** Next.js 16 (App Router) · React 19 · TypeScript · Prisma 7 · PostgreSQL · Tailwind CSS 4
+
+## Prerequisites
+
+- Node.js 20+
+- PostgreSQL 14+ (or run via the provided `docker-compose.yml`)
+
+## Setup
 
 ```bash
+# 1. Install dependencies
+npm install
+
+# 2. Configure environment
+cp .env.example .env
+# Edit .env — at minimum, set DATABASE_URL.
+
+# 3. Apply database schema
+npx prisma migrate deploy
+npx prisma generate
+
+# 4. Seed reference data (categories, asset types, departments, warranty periods)
+npm run seed
+
+# 5. Create your first admin user
+node create-user.js admin <your-password>
+
+# 6. Run the dev server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open <http://localhost:3000> and log in with `admin` / `<your-password>`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project layout
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+app/
+  (dashboard)/    # Authenticated app pages: dashboard, inventory, reports, users, settings
+  api/            # REST routes (login, products, staff, import, export, etc.)
+  components/     # Shared client components
+  login/          # Login page
+lib/              # prisma client, app branding, import/export helpers, utils
+prisma/
+  schema.prisma   # Database schema (User, Product, Staff, StaffInventory, ProductService, AuditLog, ...)
+  migrations/     # SQL migrations
+  seed.js         # Reference-data seed
+scripts/
+  clear-data.js          # Dev-only: wipe Product/Staff/StaffInventory tables
+  debug-create-product.js # Dev-only: smoke-test product create/delete
+server/
+  auth/           # Session helpers (cookie-based)
+  controllers/    # Route handlers grouped by domain
+  middleware/     # withApiSession, JSON helpers
+  services/       # Audit log, import pipeline, export pipeline
+```
 
-## Learn More
+## Useful commands
 
-To learn more about Next.js, take a look at the following resources:
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Next.js dev server with HMR |
+| `npm run build` | Production build |
+| `npm run start` | Run the production build |
+| `npm run lint` | ESLint |
+| `npm run seed` | Insert reference data |
+| `npx prisma studio` | Browse the database in a UI |
+| `npx prisma migrate dev` | Create + apply a new migration |
+| `npx prisma migrate deploy` | Apply pending migrations (production-safe) |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Health check
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+`GET /api/health` returns `{ ok: true, db: "up" }` when the DB is reachable, `503` otherwise. Wire it up to your uptime monitor.
 
-## Deploy on Vercel
+## Bootstrapping a fresh admin
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+If everyone is locked out, run `node create-user.js <username> <password>` from a shell with `DATABASE_URL` set. The script upserts on `name`, so re-running it for an existing user resets that user's password.

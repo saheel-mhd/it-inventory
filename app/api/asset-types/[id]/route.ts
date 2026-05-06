@@ -1,4 +1,4 @@
 import { updateAssetType } from "~/server/controllers/asset-type-controller";
-import { withApiSession } from "~/server/middleware/auth";
+import { withApiManager } from "~/server/middleware/auth";
 
-export const PATCH = withApiSession(updateAssetType);
+export const PATCH = withApiManager(updateAssetType);
