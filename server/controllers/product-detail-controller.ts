@@ -1,6 +1,7 @@
 import { Prisma, ProductStatus } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { prisma } from "~/lib/prisma";
+import { resolveAssignment } from "~/server/services/product-utils";
 import { getCurrentAdmin } from "~/server/auth/session";
 import { RouteContext, parseJson, serverError } from "~/server/middleware/route";
 import {
@@ -76,6 +77,7 @@ export async function updateProduct(
         select: {
           id: true,
           assignedTo: true,
+          department: { select: { name: true } },
           staffAssignments: {
             where: { returnDate: null },
             orderBy: { startDate: "desc" },
@@ -89,8 +91,10 @@ export async function updateProduct(
         throw new Error("Product not found.");
       }
 
-      const latestAssignment = product.staffAssignments[0];
-      const assignedName = product.assignedTo ?? latestAssignment?.staff?.name ?? null;
+      const target = resolveAssignment(product);
+      // A department keeps owning the asset regardless of its condition; only a
+      // person's holding is cleared when it stops being in use.
+      const assignedName = target?.kind === "user" ? target.name : null;
 
       await tx.product.update({
         where: { id },

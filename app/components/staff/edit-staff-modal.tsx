@@ -139,7 +139,7 @@ export default function EditStaffModal({
       <div className="relative w-full max-w-3xl px-4" role="dialog" aria-modal="true">
         <div className="rounded-2xl bg-white shadow-xl">
           <div className="flex items-center justify-between border-b px-5 py-4">
-            <div className="text-base font-semibold text-gray-900">Edit Staff</div>
+            <div className="text-base font-semibold text-gray-900">Edit User</div>
             <button
               type="button"
               className="rounded-md px-2 py-1 text-sm text-gray-500 hover:bg-gray-100"
@@ -245,7 +245,7 @@ export default function EditStaffModal({
 
             <div className="flex justify-end">
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : "Save Staff"}
+                {isSubmitting ? "Saving..." : "Save User"}
               </Button>
             </div>
           </form>

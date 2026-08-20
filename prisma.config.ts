@@ -10,5 +10,8 @@ export default defineConfig({
   },
   datasource: {
     url: process.env["DATABASE_URL"],
+    // Only needed for `migrate dev` / `migrate diff --from-migrations`, which
+    // replay the migration history into a throwaway database.
+    shadowDatabaseUrl: process.env["SHADOW_DATABASE_URL"],
   },
 });

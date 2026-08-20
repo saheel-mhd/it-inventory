@@ -107,7 +107,7 @@ export default function AddStaffModal({ products, departments }: AddStaffModalPr
   return (
     <>
       <Button type="button" onClick={() => setOpen(true)}>
-        + Add Staff
+        + Add User
       </Button>
 
       {open && (
@@ -121,7 +121,7 @@ export default function AddStaffModal({ products, departments }: AddStaffModalPr
           <div className="relative w-full max-w-3xl px-4" role="dialog" aria-modal="true">
             <div className="rounded-2xl bg-white shadow-xl">
               <div className="flex items-center justify-between border-b px-5 py-4">
-                <div className="text-base font-semibold text-gray-900">Add Staff</div>
+                <div className="text-base font-semibold text-gray-900">Add User</div>
                 <button
                   type="button"
                   className="rounded-md px-2 py-1 text-sm text-gray-500 hover:bg-gray-100"
@@ -139,7 +139,7 @@ export default function AddStaffModal({ products, departments }: AddStaffModalPr
                       className="mt-2 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                       value={name}
                       onChange={(event) => setName(event.target.value)}
-                      placeholder="Staff name"
+                      placeholder="User name"
                     />
                   </label>
                   <label className="text-sm font-medium text-gray-700">
@@ -233,7 +233,7 @@ export default function AddStaffModal({ products, departments }: AddStaffModalPr
 
                 <div className="flex justify-end">
                   <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Saving..." : "Save Staff"}
+                    {isSubmitting ? "Saving..." : "Save User"}
                   </Button>
                 </div>
               </form>

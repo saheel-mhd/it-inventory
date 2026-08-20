@@ -95,7 +95,7 @@ export default async function ResignHandoverFormPage({
           <div className="px-4 py-4 text-sm text-gray-700">
             {staff.inventoryUsing.length === 0 ? (
               <div className="text-sm text-gray-600">
-                No active assets assigned to this staff member.
+                No active assets assigned to this user.
               </div>
             ) : (
               <table className="w-full border-collapse">

@@ -32,11 +32,13 @@ type ProductRow = {
   status: ProductStatus;
   createdAt: Date;
   updatedAt: Date;
+  department?: { name: string } | null;
   category: { id: string; name: string } | null;
   assetType: { id: string; name: string } | null;
   warrantyPeriod: { name: string | null } | null;
   staffAssignments: Array<{
     id: string;
+    returnDate?: Date | null;
     staff: { name: string | null } | null;
   }>;
 };
@@ -120,14 +122,26 @@ export const serializeProducts = (products: ProductRow[]) =>
     .map((product) => {
       const { staffAssignments, ...rest } = product;
       const latestAssignment = staffAssignments[0];
-      const assignedName = rest.assignedTo ?? latestAssignment?.staff?.name ?? null;
+      const target = resolveAssignment({
+        assignedTo: rest.assignedTo,
+        department: rest.department,
+        staffAssignments: staffAssignments.map((item) => ({
+          returnDate: item.returnDate ?? null,
+          staff: item.staff?.name ? { name: item.staff.name } : null,
+        })),
+      });
       const activeAssignmentId = latestAssignment?.id ?? null;
+      // Only a person holding it makes an asset "in use"; a team owning a spare
+      // should not look like someone is using it.
       const status =
-        assignedName && rest.status === "AVAILABLE" ? "ACTIVE_USE" : rest.status;
+        target?.kind === "user" && rest.status === "AVAILABLE"
+          ? "ACTIVE_USE"
+          : rest.status;
 
       return {
         ...rest,
-        assignedTo: assignedName,
+        assignedTo: target?.name ?? null,
+        assignedToKind: target?.kind ?? null,
         warrantyName: rest.warrantyPeriod?.name ?? null,
         activeAssignmentId,
         status,
@@ -143,3 +157,33 @@ export const serializeProducts = (products: ProductRow[]) =>
       createdAt: product.createdAt.toISOString(),
       updatedAt: product.updatedAt.toISOString(),
     }));
+
+/**
+ * Who an asset currently belongs to.
+ *
+ * An asset can sit with a named person or with a whole team — a shared meeting
+ * room laptop, the security team's radios — so "assigned to" is not always a
+ * person's name. Resolved in order of how specific the claim is: someone
+ * physically holding it beats a team owning it.
+ */
+export type AssignmentTarget = {
+  name: string;
+  kind: "user" | "department";
+} | null;
+
+export const resolveAssignment = (product: {
+  assignedTo?: string | null;
+  department?: { name: string } | null;
+  staffAssignments?: Array<{
+    returnDate?: Date | null;
+    staff?: { name: string } | null;
+  }> | null;
+}): AssignmentTarget => {
+  const open = product.staffAssignments?.find((item) => !item.returnDate);
+  if (open?.staff?.name) return { name: open.staff.name, kind: "user" };
+  if (product.assignedTo) return { name: product.assignedTo, kind: "user" };
+  if (product.department?.name) {
+    return { name: product.department.name, kind: "department" };
+  }
+  return null;
+};

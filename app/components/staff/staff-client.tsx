@@ -101,7 +101,7 @@ export default function StaffClient({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="text-lg font-semibold text-gray-900">Staff</div>
+        <div className="text-lg font-semibold text-gray-900">Users</div>
       </div>
 
       <div className="flex items-center gap-3">
@@ -207,7 +207,7 @@ export default function StaffClient({
               {staff.length === 0 && (
                 <TableRow>
                   <TableCell className="py-8 text-center text-gray-500" colSpan={5}>
-                    No staff found.
+                    No users found.
                   </TableCell>
                 </TableRow>
               )}

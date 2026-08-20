@@ -1,5 +1,6 @@
 import InventoryClient from "~/app/components/inventory/client";
 import { prisma } from "~/lib/prisma";
+import { resolveAssignment } from "~/server/services/product-utils";
 
 const STATUS_LABELS: Record<string, string> = {
   ACTIVE_USE: "Active Use",
@@ -15,7 +16,15 @@ const STATUS_OPTIONS = Object.entries(STATUS_LABELS).map(([value, label]) => ({
 }));
 
 export default async function InventoryPage() {
-  const [products, categories, assetTypes, warrantyPeriods, staffOptions, assignProducts] =
+  const [
+    products,
+    categories,
+    assetTypes,
+    warrantyPeriods,
+    staffOptions,
+    assignProducts,
+    departmentOptions,
+  ] =
     await Promise.all([
     prisma.product.findMany({
       orderBy: { updatedAt: "desc" },
@@ -23,6 +32,7 @@ export default async function InventoryPage() {
         category: true,
         assetType: true,
         warrantyPeriod: true,
+        department: { select: { name: true } },
         staffAssignments: {
           where: { returnDate: null },
           orderBy: { startDate: "desc" },
@@ -47,21 +57,29 @@ export default async function InventoryPage() {
       orderBy: { sku: "asc" },
       select: { id: true, sku: true, product: true },
     }),
+    prisma.departmentModel.findMany({
+      where: { isActive: true },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
   ]);
 
   const serializedProducts = products
     .map((product) => {
       const { staffAssignments, ...rest } = product;
       const latestAssignment = staffAssignments[0];
-      const assignedName =
-        rest.assignedTo ?? latestAssignment?.staff?.name ?? null;
+      const target = resolveAssignment({ ...rest, staffAssignments });
+      const assignedName = target?.name ?? null;
       const activeAssignmentId = latestAssignment?.id ?? null;
       const status =
-        assignedName && rest.status === "AVAILABLE" ? "ACTIVE_USE" : rest.status;
+        target?.kind === "user" && rest.status === "AVAILABLE"
+          ? "ACTIVE_USE"
+          : rest.status;
 
       return {
         ...rest,
         assignedTo: assignedName,
+        assignedToKind: target?.kind ?? null,
         warrantyName: rest.warrantyPeriod?.name ?? null,
         activeAssignmentId,
         status,
@@ -87,6 +105,7 @@ export default async function InventoryPage() {
       statusOptions={STATUS_OPTIONS}
       staffOptions={staffOptions}
       assignProducts={assignProducts}
+      departmentOptions={departmentOptions}
     />
   );
 }

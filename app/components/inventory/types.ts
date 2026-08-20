@@ -21,6 +21,8 @@ export type InventoryProduct = {
   categoryId: string;
   assetTypeId: string;
   assignedTo: string | null;
+  // Distinguishes a person holding the asset from a team owning it.
+  assignedToKind?: "user" | "department" | null;
   activeAssignmentId: string | null;
   status: string;
   createdAt: string;

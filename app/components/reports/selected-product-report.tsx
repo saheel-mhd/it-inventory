@@ -25,6 +25,7 @@ type SelectedProduct = {
   updatedAt: Date;
   assignedTo: string | null;
   status: string;
+  department: { name: string } | null;
   category: { name: string } | null;
   assetType: { name: string } | null;
   warrantyPeriod: { name: string } | null;
@@ -62,9 +63,15 @@ export default function SelectedProductReport({
   const activeAssignment = selectedProduct.staffAssignments.find(
     (assignment) => assignment.returnDate == null,
   );
-  const assignedName = selectedProduct.assignedTo ?? activeAssignment?.staff?.name ?? null;
+  const holder = activeAssignment?.staff?.name ?? selectedProduct.assignedTo ?? null;
+  const assignedName =
+    holder ??
+    (selectedProduct.department
+      ? `${selectedProduct.department.name} (department)`
+      : null);
+  // Only a person holding it makes an asset "in use"; team ownership does not.
   const computedStatus =
-    assignedName && selectedProduct.status === "AVAILABLE"
+    holder && selectedProduct.status === "AVAILABLE"
       ? "ACTIVE_USE"
       : selectedProduct.status;
 
@@ -116,7 +123,7 @@ export default function SelectedProductReport({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Staff</TableHead>
+                <TableHead>User</TableHead>
                 <TableHead>Department</TableHead>
                 <TableHead>From</TableHead>
                 <TableHead>To</TableHead>

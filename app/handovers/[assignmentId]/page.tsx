@@ -111,7 +111,7 @@ export default async function HandoverFormPage({
 
         <div className="two-col-grid mt-5 grid gap-4 md:grid-cols-2">
           <div className="rounded-xl border bg-gray-50 p-4">
-            <div className="text-xs font-semibold uppercase text-gray-400">Staff</div>
+            <div className="text-xs font-semibold uppercase text-gray-400">User</div>
             <div className="mt-1 text-lg font-semibold text-gray-900">
               {assignment.staff.name}
             </div>
@@ -200,7 +200,7 @@ export default async function HandoverFormPage({
           </div>
           <div className="rounded-xl border border-dashed px-4 py-6">
             <div className="text-sm font-semibold text-gray-700">
-              Received By (Staff)
+              Received By (User)
             </div>
             <div className="mt-6 border-t pt-4 text-sm text-gray-600">
               Name & Signature

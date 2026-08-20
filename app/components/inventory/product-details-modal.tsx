@@ -77,7 +77,16 @@ export default function ProductDetailsModal({
                   : "-"
               }
             />
-            <DetailRow label="Assigned To" value={product.assignedTo ?? "-"} />
+            <DetailRow
+              label="Assigned To"
+              value={
+                product.assignedTo
+                  ? product.assignedToKind === "department"
+                    ? `${product.assignedTo} (department)`
+                    : product.assignedTo
+                  : "-"
+              }
+            />
             <div className="space-y-1">
               <div className="text-xs font-semibold uppercase text-gray-400">Status</div>
               <div className="flex items-center gap-2 text-sm text-gray-900">

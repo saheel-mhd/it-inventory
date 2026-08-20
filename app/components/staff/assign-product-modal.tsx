@@ -16,9 +16,18 @@ type StaffOption = {
   name: string;
 };
 
+type DepartmentOption = {
+  id: string;
+  name: string;
+};
+
+// An asset goes either to one person or to a whole team, never both at once.
+type AssignTarget = "user" | "department";
+
 type AssignProductModalProps = {
   products: ProductOption[];
   staffOptions: StaffOption[];
+  departmentOptions?: DepartmentOption[];
   presetStaffId?: string;
   triggerLabel?: string;
   triggerIcon?: string;
@@ -29,6 +38,7 @@ const todayIso = () => new Date().toISOString().slice(0, 10);
 export default function AssignProductModal({
   products,
   staffOptions,
+  departmentOptions = [],
   presetStaffId,
   triggerLabel = "Assign",
   triggerIcon = "+",
@@ -36,7 +46,9 @@ export default function AssignProductModal({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [target, setTarget] = useState<AssignTarget>("user");
   const [staffId, setStaffId] = useState(presetStaffId ?? "");
+  const [departmentId, setDepartmentId] = useState("");
   const [productId, setProductId] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [startDate, setStartDate] = useState(todayIso());
@@ -47,6 +59,8 @@ export default function AssignProductModal({
   }, [products]);
 
   const resetForm = () => {
+    setTarget("user");
+    setDepartmentId("");
     setStaffId(presetStaffId ?? "");
     setProductId("");
     setQuantity("1");
@@ -59,8 +73,14 @@ export default function AssignProductModal({
     setError("");
 
     const resolvedStaffId = presetStaffId ?? staffId;
-    if (!resolvedStaffId) {
-      setError("Staff is required.");
+    const toDepartment = !presetStaffId && target === "department";
+
+    if (toDepartment && !departmentId) {
+      setError("Choose a department.");
+      return;
+    }
+    if (!toDepartment && !resolvedStaffId) {
+      setError("Choose a user.");
       return;
     }
     if (!productId) {
@@ -73,12 +93,16 @@ export default function AssignProductModal({
       const response = await apiFetch("/api/staff/assign", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          staffId: resolvedStaffId,
-          productId,
-          quantity: Number(quantity || 1),
-          startDate,
-        }),
+        body: JSON.stringify(
+          toDepartment
+            ? { departmentId, productId }
+            : {
+                staffId: resolvedStaffId,
+                productId,
+                quantity: Number(quantity || 1),
+                startDate,
+              },
+        ),
       });
 
       if (!response.ok) {
@@ -131,24 +155,73 @@ export default function AssignProductModal({
 
               <form className="space-y-4 px-5 py-4" onSubmit={onSubmit}>
                 {!presetStaffId && (
-                  <label className="text-sm font-medium text-gray-700">
-                    Staff
-                    <select
-                      className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"
-                      value={staffId}
-                      onChange={(event) => setStaffId(event.target.value)}
-                    >
-                      <option value="">Select staff</option>
-                      {staffOptions.map((staff) => (
-                        <option key={staff.id} value={staff.id}>
-                          {staff.name}
-                        </option>
+                  <div className="space-y-3">
+                    <div className="flex gap-2" role="group" aria-label="Assign to">
+                      {(["user", "department"] as AssignTarget[]).map((option) => (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => {
+                            setTarget(option);
+                            setError("");
+                          }}
+                          aria-pressed={target === option}
+                          className={`rounded-md border px-3 py-1.5 text-sm font-medium ${
+                            target === option
+                              ? "border-blue-600 bg-blue-50 text-blue-700"
+                              : "border-gray-300 bg-white text-gray-600 hover:bg-gray-50"
+                          }`}
+                        >
+                          {option === "user" ? "A user" : "A department"}
+                        </button>
                       ))}
-                    </select>
-                  </label>
+                    </div>
+
+                    {target === "user" ? (
+                      <label className="block text-sm font-medium text-gray-700">
+                        User
+                        <select
+                          className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"
+                          value={staffId}
+                          onChange={(event) => setStaffId(event.target.value)}
+                        >
+                          <option value="">Select user</option>
+                          {staffOptions.map((staff) => (
+                            <option key={staff.id} value={staff.id}>
+                              {staff.name}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    ) : (
+                      <label className="block text-sm font-medium text-gray-700">
+                        Department
+                        <select
+                          className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"
+                          value={departmentId}
+                          onChange={(event) => setDepartmentId(event.target.value)}
+                        >
+                          <option value="">Select department</option>
+                          {departmentOptions.map((department) => (
+                            <option key={department.id} value={department.id}>
+                              {department.name}
+                            </option>
+                          ))}
+                        </select>
+                        <span className="mt-1 block text-xs font-normal text-gray-500">
+                          For assets the whole team shares. Anyone currently
+                          holding it is checked in first.
+                        </span>
+                      </label>
+                    )}
+                  </div>
                 )}
 
-                <div className="grid gap-4 md:grid-cols-2">
+                <div
+                  className={`grid gap-4 md:grid-cols-2 ${
+                    !presetStaffId && target === "department" ? "[&_[data-user-only]]:hidden" : ""
+                  }`}
+                >
                   <label className="text-sm font-medium text-gray-700">
                     Product SKU
                     <select
@@ -170,7 +243,7 @@ export default function AssignProductModal({
                       {selectedProduct?.product ?? "-"}
                     </div>
                   </label>
-                  <label className="text-sm font-medium text-gray-700">
+                  <label data-user-only className="text-sm font-medium text-gray-700">
                     Quantity
                     <input
                       className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"
@@ -180,7 +253,7 @@ export default function AssignProductModal({
                       onChange={(event) => setQuantity(event.target.value)}
                     />
                   </label>
-                  <label className="text-sm font-medium text-gray-700">
+                  <label data-user-only className="text-sm font-medium text-gray-700">
                     Assigned At
                     <input
                       className="mt-2 h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900"

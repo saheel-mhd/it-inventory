@@ -1,36 +1,34 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #111111;
-  --surface: #ffffff;
-  --surface-alt: #f3f4f6;
-  --surface-elevated: #ffffff;
-  --border: #6b7280;
-  --border-strong: #8b5e3c;
-  --accent: #c9a227;
-  --accent-strong: #4f46e5;
-  --accent-ink: #111111;
-  --muted: #374151;
-  --muted-light: #6b7280;
-}
+/*
+  CustodyHub theme — a plain, legible admin/CRM look.
+
+  Everything is driven by the tokens below. Components use ordinary Tailwind
+  utilities (bg-white, border-gray-200, text-gray-700), so retheming happens
+  here rather than by overriding utilities with !important.
+
+  The neutral ramp is a cool slate: it keeps dense tables calm and stops the
+  greys from turning muddy against the blue accent.
+*/
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-body);
-  --font-mono: var(--font-body);
-  --color-gray-50: #f9fafb;
-  --color-gray-100: #f3f4f6;
-  --color-gray-200: #e5e7eb;
-  --color-gray-300: #d1d5db;
-  --color-gray-400: #9ca3af;
-  --color-gray-500: #6b7280;
-  --color-gray-600: #4b5563;
-  --color-gray-700: #374151;
-  --color-gray-800: #1f2937;
-  --color-gray-900: #111111;
-  --color-gray-950: #000000;
+  --font-sans: var(--font-ui), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Neutrals */
+  --color-gray-50: #f8fafc;
+  --color-gray-100: #f1f5f9;
+  --color-gray-200: #e2e8f0;
+  --color-gray-300: #cbd5e1;
+  --color-gray-400: #94a3b8;
+  --color-gray-500: #64748b;
+  --color-gray-600: #475569;
+  --color-gray-700: #334155;
+  --color-gray-800: #1e293b;
+  --color-gray-900: #0f172a;
+  --color-gray-950: #020617;
+
+  /* Accent — a single, ordinary blue for interactive things */
   --color-blue-50: #eff6ff;
   --color-blue-100: #dbeafe;
   --color-blue-200: #bfdbfe;
@@ -43,50 +41,68 @@
   --color-blue-900: #1e3a8a;
 }
 
+:root {
+  --surface: #ffffff;
+  --surface-alt: #f8fafc;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --foreground: #0f172a;
+  --muted: #475569;
+  --accent: #2563eb;
+  --ring: rgb(37 99 235 / 0.35);
+
+  /* Shadows stay shallow — depth is carried by borders, not drop shadows. */
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 1px 3px rgb(15 23 42 / 0.06);
+  --shadow-raised: 0 4px 12px rgb(15 23 42 / 0.08), 0 1px 3px rgb(15 23 42 / 0.06);
+}
+
 body {
-  background: #ffffff;
+  background: var(--surface-alt);
   color: var(--foreground);
-  font-family: var(--font-body);
-  letter-spacing: 0.01em;
+  font-family: var(--font-sans);
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/*
+  One family throughout. Headings earn their weight from size and tracking
+  rather than a second typeface — the app is mostly forms and tables, and a
+  display face fights the data.
+*/
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  letter-spacing: -0.011em;
+  color: var(--foreground);
+}
+
+h1 { letter-spacing: -0.021em; }
+h2 { letter-spacing: -0.017em; }
+
+/* Figures line up column-to-column in tables and stat blocks. */
+table,
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Identifiers (SKU, serial numbers) read better in mono at a glance. */
+.ident {
+  font-family: var(--font-mono);
+  font-size: 0.9375em;
+  letter-spacing: -0.01em;
 }
 
 ::selection {
   background: #dbeafe;
-  color: #111111;
+  color: #0f172a;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: var(--font-heading);
-  color: #111111;
-  letter-spacing: 0.02em;
-}
-
-.heading,
-.text-2xl.font-bold,
-.text-3xl.font-bold,
-.text-xl.font-semibold,
-.text-lg.font-semibold,
-.text-base.font-semibold {
-  font-family: var(--font-heading);
-  color: #111111;
-}
-
-.font-nav {
-  font-family: var(--font-nav);
-}
+/* ---- surfaces ---------------------------------------------------------- */
 
 .surface-card {
   background: var(--surface);
   border-color: var(--border);
-  box-shadow:
-    0 1px 1px rgba(0, 0, 0, 0.08),
-    0 8px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-card);
 }
 
 .surface-muted {
@@ -94,84 +110,64 @@ h6 {
   border-color: var(--border);
 }
 
-/* Premium palette overrides for common utility classes */
-.bg-gray-50 {
-  background-color: var(--background) !important;
+/* Kept so existing nav markup keeps working; the nav now uses the UI face. */
+.font-nav {
+  font-family: var(--font-sans);
 }
-.bg-gray-100 {
-  background-color: var(--surface-alt) !important;
-}
-.bg-white {
-  background-color: var(--surface) !important;
-}
-.bg-black\/40 { background-color: rgba(0, 0, 0, 0.4) !important; }
-.bg-black\/50 { background-color: rgba(0, 0, 0, 0.5) !important; }
-.border-gray-200,
-.border-gray-300 {
-  border-color: var(--border) !important;
-}
-.text-gray-900 {
-  color: var(--foreground) !important;
-}
-.text-gray-700 {
-  color: var(--muted) !important;
-}
-.text-gray-600,
-.text-gray-500 {
-  color: var(--muted-light) !important;
-}
-/* Semantic colors */
-.text-red-600,
-.text-red-700,
-.text-red-800 { color: #dc2626 !important; }
-.text-green-600,
-.text-green-700 { color: #16a34a !important; }
-.text-yellow-600 { color: #c9a227 !important; }
-.text-blue-600,
-.text-blue-700 { color: #2563eb !important; }
-.text-indigo-600,
-.text-indigo-700 { color: #4f46e5 !important; }
 
-.bg-red-50,
-.bg-red-100 { background-color: #fee2e2 !important; }
-.bg-green-50,
-.bg-green-100 { background-color: #dcfce7 !important; }
-.bg-blue-50,
-.bg-blue-100 { background-color: #e0f2fe !important; }
+/* ---- forms ------------------------------------------------------------- */
 
-.border-red-200,
-.border-red-300 { border-color: #fca5a5 !important; }
-.border-green-200,
-.border-green-300 { border-color: #86efac !important; }
-.border-blue-200,
-.border-blue-300 { border-color: #7dd3fc !important; }
-
-input:not([type="checkbox"]),
+input:not([type="checkbox"]):not([type="radio"]),
 select,
 textarea {
-  border-color: var(--border) !important;
-  background: var(--surface) !important;
-  color: var(--foreground) !important;
-  transition:
-    border-color 150ms ease,
-    box-shadow 150ms ease,
-    background-color 150ms ease;
+  border-color: var(--border-strong);
+  background: var(--surface);
+  color: var(--foreground);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
-input:not([type="checkbox"]):focus,
+input:not([type="checkbox"]):not([type="radio"])::placeholder,
+textarea::placeholder {
+  color: #94a3b8;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):focus,
 select:focus,
 textarea:focus {
-  border-color: var(--accent-strong) !important;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--ring);
   outline: none;
 }
 
+input:disabled,
+select:disabled,
+textarea:disabled {
+  background: var(--surface-alt);
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* ---- interaction ------------------------------------------------------- */
+
 button,
 a {
-  transition:
-    color 160ms ease,
-    background-color 160ms ease,
-    border-color 160ms ease,
-    box-shadow 160ms ease,
-    transform 160ms ease;
+  transition: color 140ms ease, background-color 140ms ease,
+    border-color 140ms ease, box-shadow 140ms ease;
+}
+
+/* Keyboard users get a visible ring; mouse users don't. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -1,6 +1,7 @@
 import { Prisma, ProductStatus } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { prisma } from "~/lib/prisma";
+import { peekNextSku } from "~/server/services/sku-sequence";
 import { getCurrentAdmin } from "~/server/auth/session";
 import {
   getNextSkuNumber,
@@ -149,6 +150,17 @@ export async function listProducts(request: Request) {
               { assignedTo: { contains: q, mode: "insensitive" as const } },
               { sku: { contains: q, mode: "insensitive" as const } },
               { snNumber: { contains: q, mode: "insensitive" as const } },
+              // team-owned assets carry no person's name, so search the
+              // department and the current holder too
+              { department: { name: { contains: q, mode: "insensitive" as const } } },
+              {
+                staffAssignments: {
+                  some: {
+                    returnDate: null,
+                    staff: { name: { contains: q, mode: "insensitive" as const } },
+                  },
+                },
+              },
             ],
           }
         : {}),
@@ -160,6 +172,7 @@ export async function listProducts(request: Request) {
       category: true,
       assetType: true,
       warrantyPeriod: true,
+      department: { select: { name: true } },
       staffAssignments: {
         where: { returnDate: null },
         orderBy: { startDate: "desc" },
@@ -193,20 +206,7 @@ export async function getNextSku(request: Request) {
     return NextResponse.json({ sku: "", prefix: null });
   }
 
-  const products = await prisma.product.findMany({
-    where: {
-      categoryId,
-      sku: { startsWith: `${prefix}-` },
-    },
-    select: { sku: true },
-  });
-
-  const nextNumber = getNextSkuNumber(
-    products.map((item) => item.sku),
-    prefix,
-  );
-  return NextResponse.json({
-    sku: `${prefix}-${String(nextNumber).padStart(2, "0")}`,
-    prefix,
-  });
+  // Reads the same counter the allocator uses, so the tag previewed in the form
+  // is the tag actually issued — and never one that has been used before.
+  return NextResponse.json({ sku: await peekNextSku(prefix), prefix });
 }

@@ -50,7 +50,7 @@ export default function ReportsPage() {
                 <IconChevronRight className="h-5 w-5 text-gray-400 transition group-hover:text-gray-600" />
               </div>
               <div className="mt-1 text-sm text-gray-600">
-                Select a staff member and view inventory usage, returns, and reasons.
+                Select a user and view inventory usage, returns, and reasons.
               </div>
             </div>
           </div>

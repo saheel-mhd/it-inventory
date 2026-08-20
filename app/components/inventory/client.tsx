@@ -29,6 +29,7 @@ type InventoryClientProps = {
   statusOptions: Array<{ value: string; label: string }>;
   assignProducts: Array<{ id: string; sku: string; product: string }>;
   staffOptions: Array<{ id: string; name: string }>;
+  departmentOptions?: Array<{ id: string; name: string }>;
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -47,6 +48,7 @@ export default function InventoryClient({
   statusOptions,
   assignProducts,
   staffOptions,
+  departmentOptions = [],
 }: InventoryClientProps) {
   const [products, setProducts] = useState<InventoryProduct[]>(initialProducts);
   const [filters, setFilters] = useState({ q: "", categoryId: "", status: "", sort: "updated_desc" });
@@ -109,6 +111,7 @@ export default function InventoryClient({
         statusOptions={statusOptions}
         assignProducts={assignProducts}
         staffOptions={staffOptions}
+        departmentOptions={departmentOptions}
         filters={filters}
         onFilterChange={setFilters}
         onCreated={() => loadProducts(queryString)}
@@ -134,7 +137,23 @@ export default function InventoryClient({
                   <TableCell className="font-medium text-gray-900">{item.product}</TableCell>
                   <TableCell>{item.sku ?? "-"}</TableCell>
                   <TableCell>{item.specification ?? "-"}</TableCell>
-                  <TableCell>{item.assignedTo ?? "-"}</TableCell>
+                  <TableCell>
+                    {item.assignedTo ? (
+                      <span className="inline-flex items-center gap-1.5">
+                        {item.assignedTo}
+                        {item.assignedToKind === "department" && (
+                          <span
+                            className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-gray-600"
+                            title="Owned by this department rather than one person"
+                          >
+                            Dept
+                          </span>
+                        )}
+                      </span>
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
                   <TableCell>
                     <span
                       className={`inline-block h-2.5 w-2.5 rounded-full ${

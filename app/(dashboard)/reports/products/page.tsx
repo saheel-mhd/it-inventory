@@ -53,6 +53,7 @@ export default async function ProductReportPage({
           category: true,
           assetType: true,
           warrantyPeriod: true,
+          department: { select: { name: true } },
           staffAssignments: {
             orderBy: { startDate: "desc" },
             include: { staff: { include: { department: true } } },

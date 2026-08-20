@@ -11,6 +11,7 @@ import {
 
 type AssignPayload = {
   staffId?: string;
+  departmentId?: string;
   productId?: string;
   quantity?: number;
   startDate?: string;
@@ -55,11 +56,64 @@ export async function assignProductToStaff(request: Request) {
 
   const body = await parseJson<AssignPayload>(request);
 
-  if (!body.staffId) {
-    return NextResponse.json({ error: "Staff is required." }, { status: 400 });
-  }
   if (!body.productId) {
     return NextResponse.json({ error: "Product is required." }, { status: 400 });
+  }
+  if (!body.staffId && !body.departmentId) {
+    return NextResponse.json(
+      { error: "Choose a user or a department to assign this to." },
+      { status: 400 },
+    );
+  }
+
+  /*
+   * Assigning to a department means the asset belongs to a team rather than one
+   * person — a meeting room laptop, the security team's radios. Whoever was
+   * holding it stops holding it, so their record is closed rather than deleted
+   * and the custody trail stays intact.
+   */
+  if (!body.staffId && body.departmentId) {
+    const department = await prisma.departmentModel.findUnique({
+      where: { id: body.departmentId },
+      select: { id: true, name: true, isActive: true },
+    });
+    if (!department) {
+      return NextResponse.json({ error: "Department not found." }, { status: 404 });
+    }
+    if (!department.isActive) {
+      return NextResponse.json(
+        { error: "Cannot assign a product to an inactive department." },
+        { status: 400 },
+      );
+    }
+
+    await prisma.$transaction(async (tx) => {
+      await tx.staffInventory.updateMany({
+        where: { productId: body.productId!, returnDate: null },
+        data: { returnDate: new Date(), ...createActorUpdateFields(actor) },
+      });
+
+      await tx.product.update({
+        where: { id: body.productId! },
+        data: {
+          departmentId: department.id,
+          assignedTo: null,
+          status: "ACTIVE_USE",
+          ...createActorUpdateFields(actor),
+        },
+      });
+
+      await writeAuditLog(tx, {
+        actor,
+        action: "PRODUCT_ASSIGNED_TO_DEPARTMENT",
+        entityType: "Product",
+        entityId: body.productId!,
+        summary: `Assigned product to the ${department.name} department.`,
+        metadata: { departmentId: department.id, productId: body.productId! },
+      });
+    });
+
+    return NextResponse.json({ assignedTo: department.name }, { status: 201 });
   }
 
   const staff = await prisma.staff.findUnique({

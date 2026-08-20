@@ -102,7 +102,7 @@ export default function ResignStaffModal({
           <div className="relative w-full max-w-4xl px-4" role="dialog" aria-modal="true">
             <div className="rounded-2xl bg-white shadow-xl">
               <div className="border-b px-5 py-4">
-                <div className="text-lg font-semibold text-gray-900">Resign Staff</div>
+                <div className="text-lg font-semibold text-gray-900">Resign User</div>
                 <div className="mt-2 grid gap-2 text-sm text-gray-700 md:grid-cols-4">
                   <div><span className="font-medium">Name:</span> {staff.name}</div>
                   <div><span className="font-medium">Department:</span> {staff.department}</div>

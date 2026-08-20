@@ -88,8 +88,9 @@ model Product {
   product       String
   brand         String
   snNumber      String?       @unique
-  sku           String
+  sku           String        @unique
   specification String?
+  quantity      Int           @default(1)
   orderedDate   DateTime?
   cost          Decimal?
   warrantyPeriodId String?
@@ -103,6 +104,8 @@ model Product {
 
   locationId    String?
   location      Location?     @relation(fields: [locationId], references: [id])
+  departmentId  String?
+  department    DepartmentModel? @relation(fields: [departmentId], references: [id])
 
   createdBy     String?
   createdAt     DateTime      @default(now())
@@ -115,6 +118,12 @@ model Product {
   staffAssignments StaffInventory[]
   services        ProductService[]
   attachments     Attachment[]
+}
+
+model SkuSequence {
+  prefix    String   @id
+  next      Int      @default(1)
+  updatedAt DateTime @updatedAt
 }
 
 model Location {
@@ -192,6 +201,7 @@ model DepartmentModel {
   createdBy  String?
   updatedBy  String?
   staffs     Staff[]
+  products   Product[]
 }
 
 model WarrantyPeriodModel {

@@ -1,18 +1,9 @@
 import Link from "next/link";
 import SelectedStaffReport from "~/app/components/reports/selected-staff-report";
-import {
-  getSearchParam,
-} from "~/app/components/reports/report-utils";
+import { getSearchParam } from "~/app/components/reports/report-utils";
 import LiveSearchInput from "~/app/components/ui/live-search-input";
 import { IconEye } from "~/app/components/ui/icons";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "~/app/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, } from "~/app/components/ui/table";
 import { prisma } from "~/lib/prisma";
 
 type StaffReportSearchParams = {
@@ -82,9 +73,9 @@ export default async function StaffReportPage({
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <div className="text-lg font-semibold text-gray-900">Staff Report</div>
+          <div className="text-lg font-semibold text-gray-900">User Report</div>
           <div className="mt-1 text-sm text-gray-600">
-            Search and select a staff member to view full inventory usage.
+            Search and select a user to view full inventory usage.
           </div>
         </div>
         <Link href="/reports" className="text-sm font-medium text-gray-600 hover:text-gray-900">
@@ -96,7 +87,7 @@ export default async function StaffReportPage({
         <div className="flex flex-wrap items-center gap-2">
           <LiveSearchInput
             defaultValue={q}
-            placeholder="Search staff by name (or department)..."
+            placeholder="Search users by name (or department)..."
             className="w-80"
             clearParamsOnChange={["staffId"]}
           />
@@ -107,7 +98,7 @@ export default async function StaffReportPage({
           )}
         </div>
         <div className="mt-2 text-xs text-gray-500">
-          {q ? "Select a staff member from the results below." : "Start typing to search."}
+          {q ? "Select a user from the results below." : "Start typing to search."}
         </div>
       </div>
 
@@ -135,7 +126,7 @@ export default async function StaffReportPage({
                     <Link
                       href={`/reports/staff?q=${encodeURIComponent(q)}&staffId=${member.id}`}
                       className="inline-flex items-center justify-center rounded-md px-2 py-1 text-gray-600 hover:bg-gray-100"
-                      aria-label="Open staff report"
+                      aria-label="Open user report"
                     >
                       <IconEye className="h-4 w-4" />
                     </Link>
@@ -145,7 +136,7 @@ export default async function StaffReportPage({
               {staff.length === 0 && (
                 <TableRow>
                   <TableCell className="py-8 text-center text-gray-500" colSpan={3}>
-                    No staff found.
+                    No users found.
                   </TableCell>
                 </TableRow>
               )}
@@ -159,7 +150,7 @@ export default async function StaffReportPage({
           <SelectedStaffReport selectedStaff={selectedStaff} />
         ) : (
           <div className="text-sm text-gray-600">
-            Select a staff member from the search results to view their report.
+            Select a user from the search results to view their report.
           </div>
         )}
       </div>

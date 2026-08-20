@@ -102,12 +102,12 @@ export default function ResignStaffPickerModal({ staff }: ResignStaffPickerModal
           <div className="relative w-full max-w-4xl px-4" role="dialog" aria-modal="true">
             <div className="rounded-2xl bg-white shadow-xl">
               <div className="border-b px-5 py-4">
-                <div className="text-lg font-semibold text-gray-900">Resign Staff</div>
+                <div className="text-lg font-semibold text-gray-900">Resign User</div>
               </div>
 
               <form className="space-y-4 px-5 py-4" onSubmit={onSubmit}>
                 <div className="space-y-2">
-                  <div className="text-sm font-medium text-gray-700">Select Staff</div>
+                  <div className="text-sm font-medium text-gray-700">Select User</div>
                   <SearchInput
                     value={query}
                     onChange={(event) => {
@@ -120,7 +120,7 @@ export default function ResignStaffPickerModal({ staff }: ResignStaffPickerModal
                   {query.trim().length > 0 && (
                     <div className="max-h-44 overflow-auto rounded-md border border-gray-200">
                       {filteredStaff.length === 0 ? (
-                        <div className="px-3 py-2 text-sm text-gray-500">No staff found.</div>
+                        <div className="px-3 py-2 text-sm text-gray-500">No users found.</div>
                       ) : (
                         filteredStaff.map((item) => (
                           <button

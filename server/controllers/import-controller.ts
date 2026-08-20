@@ -23,6 +23,7 @@ export async function importData(request: Request) {
       updated: result.updated,
       skipped: result.skipped,
       errorCount: result.errors.length,
+      ...result.details,
     },
   });
 

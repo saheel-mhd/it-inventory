@@ -114,7 +114,7 @@ export default async function DashboardPage() {
 
       <section className="mt-6 grid gap-4 md:grid-cols-3">
         <div className="rounded-xl border bg-white p-4 shadow-sm">
-          <div className="text-sm text-gray-600">Total Staff</div>
+          <div className="text-sm text-gray-600">Total Users</div>
           <div className="mt-1 text-3xl font-bold text-gray-900">{staffCount}</div>
         </div>
         <div className="rounded-xl border bg-white p-4 shadow-sm">

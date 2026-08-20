@@ -78,7 +78,8 @@ export async function completeProductService(request: Request) {
       }
 
       const latestAssignment = product.staffAssignments[0];
-      const assignedName = product.assignedTo ?? latestAssignment?.staff?.name ?? null;
+      const assignedName =
+        latestAssignment?.staff?.name ?? product.assignedTo ?? null;
 
       if (body.serviced) {
         await tx.productService.update({

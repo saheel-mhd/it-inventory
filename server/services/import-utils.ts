@@ -5,10 +5,13 @@ import { DATASET_DEFINITIONS, type DatasetKey } from "~/lib/import-export";
 export type ImportError = { row: number; message: string };
 
 export type ImportLookups = {
-  assetTypeMap: Map<string, string>; 
+  assetTypeMap: Map<string, string>;
   categoryMap: Map<string, string>;
   departmentMap: Map<string, string>;
   warrantyMap: Map<string, string>;
+  // Human-readable "CODE (Name)" lists, used to say what a row could have said.
+  warrantyLabels: string[];
+  departmentLabels: string[];
 };
 
 export const STATUS_VALUES = new Set<ProductStatus>(Object.values(ProductStatus));

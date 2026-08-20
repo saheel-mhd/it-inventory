@@ -22,6 +22,7 @@ type InventoryToolbarProps = {
   statusOptions: Array<{ value: string; label: string }>;
   assignProducts: Array<{ id: string; sku: string; product: string }>;
   staffOptions: Array<{ id: string; name: string }>;
+  departmentOptions?: Array<{ id: string; name: string }>;
   filters: {
     q: string;
     categoryId: string;
@@ -40,6 +41,7 @@ export default function InventoryToolbar({
   statusOptions,
   assignProducts,
   staffOptions,
+  departmentOptions = [],
   filters,
   onFilterChange,
   onCreated,
@@ -68,6 +70,7 @@ export default function InventoryToolbar({
             <AssignProductModal
               products={assignProducts}
               staffOptions={staffOptions}
+              departmentOptions={departmentOptions}
               triggerLabel="Assign"
               triggerIcon="+"
             />
@@ -132,14 +135,19 @@ export default function InventoryToolbar({
             aria-label="Close add item dialog"
           />
           <div
-            className="relative w-full max-w-2xl px-4"
+            className="relative w-full max-w-5xl px-4"
             role="dialog"
             aria-modal="true"
           >
-            <div className="rounded-2xl bg-white shadow-xl">
-              <div className="flex items-center justify-between border-b px-4 py-3">
-                <div className="text-base font-semibold text-gray-900">
-                  Add Item
+            <div className="flex max-h-[90vh] flex-col rounded-xl bg-white shadow-xl">
+              <div className="flex items-center justify-between border-b border-gray-200 px-5 py-3">
+                <div>
+                  <div className="text-base font-semibold text-gray-900">
+                    Add Item
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    Record a purchase — add a line for each thing bought.
+                  </div>
                 </div>
                 <button
                   type="button"
@@ -149,7 +157,7 @@ export default function InventoryToolbar({
                   Close
                 </button>
               </div>
-              <div className="p-4">
+              <div className="overflow-y-auto p-5">
                 <AddItemForm
                   categories={categories}
                   assetTypes={assetTypes}
